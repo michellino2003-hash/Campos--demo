@@ -1,995 +1,330 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <meta name="theme-color" content="#080a0d" />
-  <title>CampOS — V4 Corrected Prototype</title>
-  <style>
-    :root{
-      --bg:#07090c;
-      --panel:#10141a;
-      --panel-2:#151a21;
-      --panel-3:#1b212a;
-      --line:#252d37;
-      --text:#f5f6f7;
-      --muted:#969faa;
-      --muted-2:#6f7884;
-      --red:#c9403b;
-      --red-bright:#ef5b52;
-      --gold:#c6a15b;
-      --green:#54c68b;
-      --orange:#e59a57;
-      --shadow:0 18px 48px rgba(0,0,0,.42);
-      --radius:22px;
-      --radius-sm:15px;
-    }
-    *{box-sizing:border-box}
-    html,body{margin:0;min-height:100%;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",Roboto,Helvetica,Arial,sans-serif}
-    body{
-      background:
-        radial-gradient(circle at 15% -10%,rgba(201,64,59,.16),transparent 28%),
-        radial-gradient(circle at 100% 20%,rgba(198,161,91,.08),transparent 24%),
-        var(--bg);
-      overflow-x:hidden;
-    }
-    button,input,textarea,select{font:inherit}
-    button{cursor:pointer}
-    .app{
-      width:min(100%,500px);
-      min-height:100dvh;
-      margin:0 auto;
-      position:relative;
-      padding-bottom:104px;
-      border-left:1px solid rgba(255,255,255,.025);
-      border-right:1px solid rgba(255,255,255,.025);
-    }
-    .topbar{
-      padding:calc(18px + env(safe-area-inset-top)) 20px 12px;
-      display:flex;align-items:center;justify-content:space-between;
-      position:sticky;top:0;z-index:25;
-      background:linear-gradient(to bottom,rgba(7,9,12,.98),rgba(7,9,12,.87),transparent);
-      backdrop-filter:blur(16px);
-    }
-    .brand{display:flex;align-items:center;gap:11px}
-    .brand-mark{
-      width:36px;height:36px;border-radius:12px;
-      display:grid;place-items:center;
-      background:linear-gradient(145deg,#d74c44,#7f2222);
-      box-shadow:inset 0 1px rgba(255,255,255,.24),0 8px 20px rgba(201,64,59,.24);
-      font-weight:950;letter-spacing:-1px;
-    }
-    .brand-title{font-weight:900;letter-spacing:-.5px;font-size:20px}
-    .brand-title span{color:var(--red-bright)}
-    .avatar{
-      width:38px;height:38px;border-radius:50%;border:1px solid #313946;
-      background:linear-gradient(145deg,#252c36,#11151b);
-      display:grid;place-items:center;font-weight:800;color:#ddd;
-    }
-    .screen{display:none;padding:8px 18px 26px;animation:fade .24s ease}
-    .screen.active{display:block}
-    @keyframes fade{from{opacity:.25;transform:translateY(4px)}to{opacity:1;transform:none}}
-    .eyebrow{font-size:12px;letter-spacing:1.4px;text-transform:uppercase;color:var(--gold);font-weight:800}
-    h1,h2,h3,p{margin:0}
-    h1{font-size:34px;line-height:1.04;letter-spacing:-1.35px}
-    h2{font-size:24px;line-height:1.15;letter-spacing:-.7px}
-    h3{font-size:17px;letter-spacing:-.25px}
-    .muted{color:var(--muted)}
-    .tiny{font-size:12px}
-    .section-title{display:flex;align-items:end;justify-content:space-between;margin:25px 2px 12px}
-    .section-title a{font-size:13px;color:#c7cbd0;text-decoration:none}
-    .hero{
-      position:relative;overflow:hidden;
-      min-height:252px;padding:24px;
-      border:1px solid #2a3038;border-radius:28px;
-      background:
-        linear-gradient(135deg,rgba(201,64,59,.17),transparent 40%),
-        linear-gradient(180deg,#171c23,#0e1217);
-      box-shadow:var(--shadow);
-    }
-    .hero::after{
-      content:"";position:absolute;right:-55px;bottom:-70px;width:220px;height:220px;border-radius:50%;
-      border:28px solid rgba(255,255,255,.025);
-      box-shadow:0 0 0 28px rgba(255,255,255,.015);
-    }
-    .hero-kicker{display:flex;gap:8px;align-items:center;margin-bottom:18px}
-    .pill{
-      display:inline-flex;align-items:center;gap:6px;
-      border:1px solid #333b45;background:#151a20;color:#c5c9ce;
-      padding:7px 10px;border-radius:999px;font-size:12px;font-weight:700
-    }
-    .pill.red{border-color:rgba(239,91,82,.28);background:rgba(201,64,59,.10);color:#ff8f88}
-    .pill.gold{border-color:rgba(198,161,91,.29);background:rgba(198,161,91,.08);color:#e4c98e}
-    .hero h1{max-width:320px;margin-bottom:9px}
-    .hero p{max-width:335px;line-height:1.48;font-size:14px;color:#adb4bd}
-    .hero-actions{display:flex;gap:10px;margin-top:22px;position:relative;z-index:2}
-    .btn{
-      border:0;border-radius:16px;padding:14px 17px;font-weight:850;
-      display:inline-flex;align-items:center;justify-content:center;gap:8px;
-      transition:.16s ease;min-height:48px;
-    }
-    .btn:active{transform:scale(.975)}
-    .btn-primary{
-      color:white;background:linear-gradient(180deg,var(--red-bright),#b92e2a);
-      box-shadow:0 8px 22px rgba(201,64,59,.28),inset 0 1px rgba(255,255,255,.22)
-    }
-    .btn-secondary{color:#e9ebee;background:#20262e;border:1px solid #303844}
-    .btn-ghost{color:#c9cdd2;background:transparent;border:1px solid #303844}
-    .btn.full{width:100%}
-    .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:11px}
-    .card{
-      border:1px solid var(--line);background:linear-gradient(180deg,var(--panel-2),var(--panel));
-      border-radius:var(--radius);padding:17px;box-shadow:0 10px 25px rgba(0,0,0,.16)
-    }
-    .metric .value{font-size:27px;font-weight:900;letter-spacing:-1px;margin-top:8px}
-    .metric .delta{font-size:12px;color:var(--green);margin-top:6px;font-weight:750}
-    .readiness{
-      display:grid;grid-template-columns:88px 1fr;gap:15px;align-items:center
-    }
-    .ring{
-      width:86px;height:86px;border-radius:50%;
-      background:conic-gradient(var(--green) 0 78%,#252b33 78%);
-      display:grid;place-items:center;position:relative
-    }
-    .ring::before{content:"";position:absolute;inset:8px;border-radius:50%;background:#12171d}
-    .ring strong{position:relative;font-size:22px}
-    .check-row{display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-bottom:1px solid #252c34}
-    .check-row:last-child{border:0}
-    .status-dot{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 12px rgba(84,198,139,.55)}
-    .week-strip{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
-    .day{
-      border:1px solid #252c35;background:#11161c;border-radius:15px;padding:10px 3px;text-align:center;
-      color:#818a95;font-size:11px
-    }
-    .day b{display:block;color:#cbd0d6;font-size:14px;margin-top:6px}
-    .day.done{border-color:rgba(84,198,139,.27);background:rgba(84,198,139,.07)}
-    .day.done b{color:var(--green)}
-    .day.today{border-color:rgba(239,91,82,.46);background:rgba(201,64,59,.12);color:#ffaaa5}
-    .day.today b{color:#fff}
-    .workout-list{display:flex;flex-direction:column;gap:10px}
-    .workout-item{
-      width:100%;text-align:left;color:inherit;border:1px solid var(--line);
-      background:linear-gradient(180deg,#171c23,#11151a);border-radius:18px;
-      padding:15px;display:flex;align-items:center;gap:13px
-    }
-    .workout-icon{
-      flex:0 0 45px;height:45px;border-radius:14px;
-      display:grid;place-items:center;background:#20262e;border:1px solid #303844;font-size:20px
-    }
-    .workout-info{min-width:0;flex:1}
-    .workout-info h3{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .workout-info p{font-size:12px;color:var(--muted);margin-top:5px}
-    .chev{color:#6e7782;font-size:22px}
-    .banner{
-      padding:16px;border-radius:18px;border:1px solid rgba(198,161,91,.24);
-      background:linear-gradient(135deg,rgba(198,161,91,.11),rgba(198,161,91,.025));
-      display:flex;align-items:flex-start;gap:12px
-    }
-    .banner-icon{font-size:20px}
-    .banner p{color:#b8bdc4;font-size:13px;line-height:1.45;margin-top:4px}
-    .screen-head{display:flex;align-items:center;justify-content:space-between;margin:5px 0 18px}
-    .back{
-      border:1px solid #2b333d;background:#151a20;color:white;width:42px;height:42px;border-radius:14px;font-size:21px
-    }
-    .head-spacer{width:42px}
-    .plan-day{
-      border:1px solid var(--line);border-radius:20px;background:#11161c;margin-bottom:10px;overflow:hidden
-    }
-    .plan-day button{
-      width:100%;color:inherit;background:transparent;border:0;padding:16px;
-      display:flex;align-items:center;gap:13px;text-align:left
-    }
-    .plan-date{
-      width:46px;height:50px;border-radius:14px;background:#1c222a;border:1px solid #2a323c;
-      display:grid;place-items:center;font-size:12px;color:#8f98a3;flex:0 0 auto
-    }
-    .plan-date b{display:block;color:#e5e7ea;font-size:17px}
-    .plan-copy{flex:1}
-    .plan-copy p{font-size:12px;color:var(--muted);margin-top:5px}
-    .plan-day.current{border-color:rgba(239,91,82,.36);background:rgba(201,64,59,.055)}
-    .plan-day.current .plan-date{background:rgba(201,64,59,.13);border-color:rgba(239,91,82,.31)}
-    .plan-day.recovery .plan-date{background:rgba(84,198,139,.07)}
-    .preview-summary{
-      display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:14px 0 20px
-    }
-    .mini{
-      text-align:center;border:1px solid var(--line);background:#11161c;border-radius:16px;padding:12px 6px
-    }
-    .mini strong{display:block;font-size:18px}
-    .mini span{display:block;font-size:11px;color:var(--muted);margin-top:4px}
-    .movement-card{
-      border:1px solid var(--line);background:#12171d;border-radius:19px;padding:15px;margin-bottom:10px
-    }
-    .movement-top{display:flex;align-items:center;gap:12px}
-    .move-num{
-      width:34px;height:34px;border-radius:11px;background:#222933;border:1px solid #303945;
-      display:grid;place-items:center;color:#d5d9df;font-weight:850;font-size:13px
-    }
-    .movement-top .copy{flex:1}
-    .movement-top p{color:var(--muted);font-size:12px;margin-top:4px}
-    .guide-btn{
-      border:1px solid rgba(198,161,91,.28);background:rgba(198,161,91,.08);color:#e8cb91;
-      padding:8px 10px;border-radius:11px;font-size:12px;font-weight:800
-    }
-    .movement-notes{
-      margin-top:12px;padding-top:12px;border-top:1px solid #252c34;color:#9da5af;
-      display:flex;justify-content:space-between;font-size:12px
-    }
-    .sticky-action{
-      position:sticky;bottom:90px;z-index:15;margin-top:18px;
-      padding:10px;border-radius:21px;background:rgba(9,11,14,.83);backdrop-filter:blur(14px)
-    }
-    .workout-header{
-      padding:18px;border:1px solid #2a313a;border-radius:22px;background:linear-gradient(150deg,#191f27,#0e1217)
-    }
-    .workout-progress{height:8px;background:#252c34;border-radius:999px;overflow:hidden;margin:14px 0 9px}
-    .workout-progress span{display:block;height:100%;width:16%;background:linear-gradient(90deg,#b9322e,var(--red-bright));border-radius:999px;transition:.3s}
-    .active-exercise{text-align:center;padding:27px 14px 17px}
-    .active-exercise .count{color:var(--gold);font-size:12px;font-weight:850;letter-spacing:1.2px;text-transform:uppercase}
-    .active-exercise h1{margin:9px 0 7px;font-size:31px}
-    .active-exercise p{color:var(--muted)}
-    .set-grid{display:grid;grid-template-columns:54px 1fr 1fr 48px;gap:8px;align-items:center}
-    .set-grid.header{font-size:11px;color:#737d88;text-transform:uppercase;letter-spacing:.8px;margin:17px 0 7px}
-    .set-row{margin-bottom:8px}
-    .set-label{font-weight:850;color:#cbd0d6}
-    .field{
-      width:100%;border:1px solid #303844;background:#151a20;color:white;border-radius:13px;padding:12px;text-align:center;outline:none
-    }
-    .field:focus{border-color:rgba(239,91,82,.7);box-shadow:0 0 0 3px rgba(201,64,59,.10)}
-    .set-check{
-      width:44px;height:44px;border:1px solid #313a45;background:#1a2027;color:#7e8792;border-radius:13px;font-size:18px
-    }
-    .set-check.done{background:rgba(84,198,139,.14);border-color:rgba(84,198,139,.38);color:var(--green)}
-    .rest{
-      border:1px solid rgba(239,91,82,.23);background:rgba(201,64,59,.065);
-      border-radius:20px;padding:16px;text-align:center;margin:18px 0
-    }
-    .rest .time{font-size:34px;font-weight:950;letter-spacing:-1px;margin:5px}
-    .rest-controls{display:flex;justify-content:center;gap:8px}
-    .rest-controls button{border:1px solid #363e48;background:#1c2229;color:#d1d5da;border-radius:11px;padding:8px 12px;font-weight:800}
-    .pain-box{
-      border:1px solid #303844;background:#12171d;border-radius:20px;padding:16px;margin-top:16px
-    }
-    .pain-scale{display:grid;grid-template-columns:repeat(6,1fr);gap:6px;margin-top:12px}
-    .pain-scale button{
-      border:1px solid #303844;background:#1a2027;color:#aeb5bd;border-radius:11px;padding:10px 0;font-weight:800
-    }
-    .pain-scale button.selected{border-color:rgba(229,154,87,.55);background:rgba(229,154,87,.14);color:#ffc58e}
-    .textarea{
-      width:100%;min-height:82px;margin-top:10px;resize:vertical;color:white;background:#151a20;
-      border:1px solid #303844;border-radius:14px;padding:12px;outline:none
-    }
-    .history-card{
-      border:1px solid var(--line);background:#11161c;border-radius:19px;padding:16px;margin-bottom:10px
-    }
-    .history-card button{
-      width:100%;border:0;background:transparent;color:inherit;text-align:left;padding:0;
-      display:flex;align-items:center;gap:12px
-    }
-    .history-date{
-      width:49px;height:52px;border-radius:14px;background:#1d232b;display:grid;place-items:center;
-      border:1px solid #2b343e;color:#98a1ab;font-size:11px;flex:0 0 auto
-    }
-    .history-date b{display:block;font-size:18px;color:#e9ebed}
-    .history-copy{flex:1}
-    .history-copy p{font-size:12px;color:var(--muted);margin-top:5px}
-    .history-delta{font-size:12px;color:var(--green);font-weight:800;text-align:right}
-    .tabs{
-      display:flex;background:#11161c;border:1px solid var(--line);padding:4px;border-radius:14px;gap:3px;margin:14px 0
-    }
-    .tabs button{
-      flex:1;border:0;border-radius:10px;padding:9px 4px;background:transparent;color:#737d88;font-size:11px;font-weight:800
-    }
-    .tabs button.active{background:#252c35;color:white}
-    .chart-card{border:1px solid var(--line);background:#11161c;border-radius:21px;padding:16px}
-    .chart-top{display:flex;align-items:flex-start;justify-content:space-between}
-    .chart-value{font-size:30px;font-weight:950;letter-spacing:-1px;margin-top:5px}
-    .chart-delta{font-size:12px;color:var(--green);font-weight:850;margin-top:6px}
-    #chart{width:100%;height:185px;margin-top:10px;overflow:visible}
-    .chart-grid{stroke:#252c34;stroke-width:1}
-    .chart-line{fill:none;stroke:#ef5b52;stroke-width:4;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 5px 7px rgba(239,91,82,.23))}
-    .chart-area{fill:url(#areaGradient)}
-    .chart-dot{fill:#11161c;stroke:#ef5b52;stroke-width:3}
-    .positive-card{
-      border:1px solid rgba(84,198,139,.27);background:linear-gradient(145deg,rgba(84,198,139,.10),rgba(84,198,139,.025));
-      border-radius:20px;padding:17px;margin-top:12px
-    }
-    .positive-card h3{color:#b8f0d1}
-    .positive-card p{font-size:13px;color:#a8b4ae;line-height:1.45;margin-top:7px}
-    .measure-form{display:grid;grid-template-columns:1fr 1fr;gap:9px}
-    .measure-form label{font-size:11px;color:#828b96}
-    .measure-form label span{display:block;margin-bottom:7px}
-    .measure-form .field{text-align:left}
-    .measure-form .wide{grid-column:1/-1}
-    .bottom-nav{
-      position:fixed;left:50%;transform:translateX(-50%);bottom:0;z-index:30;
-      width:min(100%,500px);padding:9px 13px calc(9px + env(safe-area-inset-bottom));
-      display:grid;grid-template-columns:repeat(4,1fr);gap:5px;
-      border-top:1px solid rgba(255,255,255,.07);
-      background:rgba(10,12,15,.93);backdrop-filter:blur(20px)
-    }
-    .nav-btn{
-      border:0;background:transparent;color:#69737e;border-radius:15px;padding:8px 2px 7px;
-      font-size:10px;font-weight:750
-    }
-    .nav-btn .nav-icon{display:block;font-size:21px;margin-bottom:4px;filter:grayscale(1)}
-    .nav-btn.active{color:white;background:#181e25}
-    .nav-btn.active .nav-icon{filter:none}
-    .modal{
-      position:fixed;inset:0;z-index:100;background:rgba(0,0,0,.72);
-      display:none;align-items:flex-end;justify-content:center;backdrop-filter:blur(8px)
-    }
-    .modal.open{display:flex}
-    .sheet{
-      width:min(100%,500px);max-height:92dvh;overflow:auto;
-      border-radius:28px 28px 0 0;background:#0f1318;border:1px solid #2a313a;
-      padding:13px 18px calc(24px + env(safe-area-inset-bottom));
-      box-shadow:0 -20px 50px rgba(0,0,0,.5);animation:sheet .23s ease
-    }
-    @keyframes sheet{from{transform:translateY(28px);opacity:.4}to{transform:none;opacity:1}}
-    .grab{width:46px;height:5px;border-radius:999px;background:#3a424d;margin:0 auto 17px}
-    .sheet-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
-    .close{width:39px;height:39px;border-radius:50%;border:1px solid #303844;background:#1b2129;color:white;font-size:19px}
-    .motion-stage{
-      height:225px;margin:16px 0;border-radius:21px;border:1px solid #2a323d;
-      background:
-        radial-gradient(circle at 50% 28%,rgba(201,64,59,.12),transparent 36%),
-        linear-gradient(#141a21,#0d1116);
-      overflow:hidden;position:relative;display:grid;place-items:center
-    }
-    .motion-stage::after{
-      content:"";position:absolute;left:0;right:0;bottom:26px;height:1px;background:#353d47
-    }
-    .motion-svg{width:88%;height:88%;overflow:visible}
-    .motion-svg .body{stroke:#e6e9ed;stroke-width:9;stroke-linecap:round;stroke-linejoin:round;fill:none}
-    .motion-svg .accent{stroke:#ef5b52;stroke-width:8;stroke-linecap:round;fill:none}
-    .motion-svg .equipment{stroke:#697481;stroke-width:8;stroke-linecap:round;fill:none}
-    .motion-svg .joint{fill:#f2f4f5}
-    .motion-svg .path{stroke:#c6a15b;stroke-width:3;stroke-dasharray:7 8;fill:none;opacity:.75}
-    .playing .anim-a{animation:moveA 1.8s ease-in-out infinite alternate}
-    .playing .anim-b{animation:moveB 1.8s ease-in-out infinite alternate}
-    .playing .anim-c{animation:moveC 1.8s ease-in-out infinite alternate}
-    .playing .pulse{animation:pulse 1.1s ease-in-out infinite alternate}
-    @keyframes moveA{to{transform:translate(25px,-8px) rotate(-7deg)}}
-    @keyframes moveB{to{transform:translate(-20px,12px) rotate(10deg)}}
-    @keyframes moveC{to{transform:translate(0,-24px)}}
-    @keyframes pulse{to{opacity:.25}}
-    .guide-controls{display:flex;gap:9px;margin-bottom:15px}
-    .guide-controls button{flex:1}
-    .guide-section{border-top:1px solid #262d36;padding:15px 0}
-    .guide-section h3{font-size:15px;margin-bottom:7px}
-    .guide-section p,.guide-section li{font-size:13px;line-height:1.5;color:#aab1ba}
-    .guide-section ul{padding-left:19px;margin:7px 0 0}
-    .detail-table{margin-top:15px;border:1px solid var(--line);border-radius:18px;overflow:hidden}
-    .detail-row{display:flex;justify-content:space-between;gap:12px;padding:13px 14px;border-bottom:1px solid var(--line);font-size:13px}
-    .detail-row:last-child{border:0}
-    .detail-row span:last-child{text-align:right;color:#d9dde1}
-    .toast{
-      position:fixed;left:50%;bottom:112px;z-index:200;transform:translate(-50%,15px);
-      width:calc(min(100%,500px) - 36px);background:#20272f;border:1px solid #34404c;color:white;
-      padding:14px 16px;border-radius:15px;box-shadow:var(--shadow);opacity:0;pointer-events:none;transition:.25s
-    }
-    .toast.show{opacity:1;transform:translate(-50%,0)}
-    .locked{opacity:.55;pointer-events:none}
-    .spacer{height:10px}
-    @media (min-width:700px){
-      .app{margin-top:20px;min-height:calc(100dvh - 20px);border-radius:28px 28px 0 0;overflow:hidden;box-shadow:0 0 70px rgba(0,0,0,.5)}
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#07090c">
+<title>CampOS V5 — Walking, Nutrition & Workout History</title>
+<style>
+:root{
+  --bg:#07090c;--panel:#10141a;--panel2:#151a21;--panel3:#1b222b;--line:#29313b;
+  --text:#f6f7f8;--muted:#9ba4af;--red:#ef5a52;--red2:#b72f2b;--gold:#c8a35d;
+  --green:#55c98e;--orange:#e5a05c;--radius:22px;--shadow:0 18px 45px rgba(0,0,0,.38)
+}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",Roboto,Arial,sans-serif}
+body{background:
+ radial-gradient(circle at 10% -5%,rgba(239,90,82,.14),transparent 28%),
+ radial-gradient(circle at 105% 15%,rgba(200,163,93,.08),transparent 25%),
+ var(--bg)}
+button,input,select,textarea{font:inherit}button{cursor:pointer}
+.app{width:min(100%,500px);min-height:100dvh;margin:auto;padding-bottom:105px;position:relative}
+.topbar{position:sticky;top:0;z-index:30;display:flex;align-items:center;justify-content:space-between;
+ padding:calc(17px + env(safe-area-inset-top)) 19px 12px;background:linear-gradient(rgba(7,9,12,.98),rgba(7,9,12,.88),transparent);backdrop-filter:blur(18px)}
+.brand{display:flex;gap:10px;align-items:center}.mark{width:36px;height:36px;border-radius:12px;background:linear-gradient(145deg,#df5048,#852421);display:grid;place-items:center;font-weight:950;box-shadow:inset 0 1px rgba(255,255,255,.2),0 8px 20px rgba(239,90,82,.2)}
+.brand b{font-size:20px;letter-spacing:-.5px}.brand b span{color:var(--red)}
+.avatar{width:39px;height:39px;border-radius:50%;display:grid;place-items:center;background:#1c222b;border:1px solid #313a45;font-weight:850}
+.screen{display:none;padding:7px 18px 28px;animation:fade .23s ease}.screen.active{display:block}
+@keyframes fade{from{opacity:.3;transform:translateY(4px)}to{opacity:1;transform:none}}
+h1,h2,h3,p{margin:0}h1{font-size:34px;line-height:1.04;letter-spacing:-1.25px}h2{font-size:24px;letter-spacing:-.65px}h3{font-size:17px;letter-spacing:-.2px}
+.eyebrow{font-size:12px;letter-spacing:1.35px;text-transform:uppercase;color:var(--gold);font-weight:850}.muted{color:var(--muted)}.tiny{font-size:12px}
+.pill{display:inline-flex;align-items:center;gap:6px;border:1px solid #333c47;background:#161b21;padding:7px 10px;border-radius:999px;color:#c5cbd2;font-size:12px;font-weight:800}
+.pill.red{border-color:rgba(239,90,82,.33);background:rgba(239,90,82,.1);color:#ff9993}.pill.gold{border-color:rgba(200,163,93,.28);background:rgba(200,163,93,.08);color:#e7ca91}
+.btn{border:0;border-radius:16px;padding:14px 17px;min-height:48px;font-weight:880;color:white;display:inline-flex;align-items:center;justify-content:center;gap:8px;transition:.16s}
+.btn:active{transform:scale(.976)}.btn.primary{background:linear-gradient(#f05c54,#b8312c);box-shadow:0 8px 22px rgba(239,90,82,.25),inset 0 1px rgba(255,255,255,.2)}
+.btn.secondary{background:#202730;border:1px solid #323c48}.btn.ghost{background:transparent;border:1px solid #323c48;color:#d4d8dd}.btn.full{width:100%}
+.hero{position:relative;overflow:hidden;padding:24px;border-radius:28px;border:1px solid #2c343e;background:linear-gradient(140deg,rgba(239,90,82,.14),transparent 43%),linear-gradient(#181e26,#0e1217);box-shadow:var(--shadow)}
+.hero:after{content:"";position:absolute;width:210px;height:210px;border-radius:50%;right:-75px;bottom:-90px;border:28px solid rgba(255,255,255,.025);box-shadow:0 0 0 28px rgba(255,255,255,.012)}
+.hero h1{margin:18px 0 9px;max-width:330px}.hero p{color:#adb5bf;line-height:1.48;font-size:14px;max-width:350px}.hero-actions{display:flex;gap:9px;margin-top:21px;position:relative;z-index:2}
+.section-title{display:flex;align-items:end;justify-content:space-between;margin:24px 2px 12px}.section-title a{color:#d5d8dc;font-size:13px;text-decoration:none}
+.card{border:1px solid var(--line);background:linear-gradient(var(--panel2),var(--panel));border-radius:var(--radius);padding:17px;box-shadow:0 10px 25px rgba(0,0,0,.15)}
+.readiness{display:grid;grid-template-columns:88px 1fr;gap:15px;align-items:center}.ring{width:86px;height:86px;border-radius:50%;background:conic-gradient(var(--green) 0 78%,#262d36 78%);display:grid;place-items:center;position:relative}.ring:before{content:"";position:absolute;inset:8px;border-radius:50%;background:#12171d}.ring strong{position:relative;font-size:22px}
+.check-row{display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-bottom:1px solid #252d36}.check-row:last-child{border:0}
+.week{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}.day{padding:10px 2px;border-radius:15px;text-align:center;background:#11161c;border:1px solid #252d36;color:#828b96;font-size:10px}.day b{display:block;color:#d3d7dc;font-size:14px;margin-top:6px}.day.done{background:rgba(85,201,142,.06);border-color:rgba(85,201,142,.24)}.day.done b{color:var(--green)}.day.today{background:rgba(239,90,82,.11);border-color:rgba(239,90,82,.4);color:#ffaaa4}.day.today b{color:white}
+.quick-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.quick{border:1px solid var(--line);background:linear-gradient(#171d24,#101419);border-radius:20px;padding:16px;color:inherit;text-align:left;min-height:136px}.quick-icon{width:42px;height:42px;border-radius:14px;background:#222a33;border:1px solid #323c47;display:grid;place-items:center;font-size:20px;margin-bottom:13px}.quick p{font-size:12px;line-height:1.4;color:var(--muted);margin-top:6px}
+.banner{display:flex;gap:12px;padding:16px;border-radius:19px;border:1px solid rgba(200,163,93,.25);background:linear-gradient(135deg,rgba(200,163,93,.1),rgba(200,163,93,.025))}.banner p{font-size:13px;line-height:1.45;color:#adb5bd;margin-top:5px}
+.screen-head{display:flex;align-items:center;justify-content:space-between;margin:4px 0 18px}.back{width:42px;height:42px;border-radius:14px;border:1px solid #303946;background:#171c23;color:white;font-size:22px}.head-space{width:42px}
+.plan-day{border:1px solid var(--line);border-radius:20px;background:#11161c;margin-bottom:10px;overflow:hidden}.plan-day button{width:100%;border:0;background:transparent;color:inherit;padding:16px;display:flex;gap:13px;align-items:center;text-align:left}.plan-date{width:47px;height:51px;border-radius:14px;background:#1c232c;border:1px solid #2e3742;display:grid;place-items:center;color:#929ca7;font-size:11px}.plan-date b{display:block;font-size:17px;color:#edf0f2}.plan-copy{flex:1}.plan-copy p{font-size:12px;color:var(--muted);margin-top:5px}.plan-day.current{border-color:rgba(239,90,82,.35);background:rgba(239,90,82,.05)}
+.preview-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:14px 0 18px}.mini{text-align:center;border:1px solid var(--line);background:#11161c;border-radius:16px;padding:12px 5px}.mini strong{display:block;font-size:18px}.mini span{font-size:10px;color:var(--muted)}
+.swipe-note{text-align:center;font-size:12px;color:var(--muted);margin:12px 0}
+.preview-carousel{display:flex;gap:13px;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;padding:2px 1px 12px;-webkit-overflow-scrolling:touch}.preview-carousel::-webkit-scrollbar{display:none}
+.exercise-slide{flex:0 0 94%;scroll-snap-align:center;border:1px solid var(--line);background:linear-gradient(#151b22,#0f1318);border-radius:24px;overflow:hidden}
+.slide-top{padding:16px 16px 0;display:flex;align-items:flex-start;justify-content:space-between;gap:10px}.slide-dose{font-size:12px;color:var(--muted);margin-top:5px}.motion-box{height:205px;margin:14px;border:1px solid #2d3742;border-radius:20px;background:radial-gradient(circle at 50% 28%,rgba(239,90,82,.09),transparent 38%),#10151b;display:grid;place-items:center;overflow:hidden;position:relative}.motion-box:after{content:"";position:absolute;left:0;right:0;bottom:25px;height:1px;background:#38414c}.motion-svg{width:88%;height:88%;overflow:visible}.motion-svg .body{stroke:#eef0f2;stroke-width:9;stroke-linecap:round;stroke-linejoin:round;fill:none}.motion-svg .accent{stroke:#ef5a52;stroke-width:8;stroke-linecap:round;fill:none}.motion-svg .equipment{stroke:#6c7783;stroke-width:8;stroke-linecap:round;fill:none}.motion-svg .joint{fill:#f3f4f5}.motion-svg .path{stroke:#c8a35d;stroke-width:3;stroke-dasharray:7 8;fill:none;opacity:.75}.playing .anim-a{animation:moveA 1.8s ease-in-out infinite alternate}.playing .anim-b{animation:moveB 1.8s ease-in-out infinite alternate}.playing .anim-c{animation:moveC 1.8s ease-in-out infinite alternate}.playing .pulse{animation:pulse 1.1s ease-in-out infinite alternate}
+@keyframes moveA{to{transform:translate(24px,-8px) rotate(-7deg)}}@keyframes moveB{to{transform:translate(-18px,11px) rotate(9deg)}}@keyframes moveC{to{transform:translateY(-23px)}}@keyframes pulse{to{opacity:.28}}
+.slide-details{padding:0 16px 17px}.detail-block{padding:13px 0;border-top:1px solid #28313a}.detail-block h3{font-size:14px;margin-bottom:5px}.detail-block p,.detail-block li{font-size:12px;line-height:1.48;color:#aab2bc}.detail-block ul{padding-left:18px;margin:5px 0 0}
+.carousel-nav{display:flex;align-items:center;justify-content:center;gap:10px;margin:2px 0 12px}.carousel-nav button{width:39px;height:39px;border-radius:13px;border:1px solid #303a46;background:#181e25;color:white;font-size:19px}.dots{display:flex;gap:5px;align-items:center}.dot{width:6px;height:6px;border-radius:99px;background:#414a55;transition:.2s}.dot.active{width:19px;background:var(--red)}
+.sticky{position:sticky;bottom:90px;z-index:15;margin-top:12px;padding:9px;border-radius:20px;background:rgba(8,10,13,.85);backdrop-filter:blur(14px)}
+.choice-row{display:flex;gap:8px;overflow-x:auto;padding:2px 0 7px;scrollbar-width:none}.choice-row::-webkit-scrollbar{display:none}.choice{white-space:nowrap;border:1px solid #313b47;background:#171d24;color:#aeb6bf;border-radius:999px;padding:10px 13px;font-size:12px;font-weight:800}.choice.active{border-color:rgba(239,90,82,.48);background:rgba(239,90,82,.12);color:#fff}
+.walk-hero{padding:22px;border:1px solid #2c3540;border-radius:26px;background:radial-gradient(circle at 85% 15%,rgba(200,163,93,.15),transparent 30%),linear-gradient(145deg,#182029,#10151b)}.walk-hero h1{margin:10px 0}.walk-meter{height:8px;background:#27303a;border-radius:999px;margin:18px 0 8px;overflow:hidden}.walk-meter span{display:block;width:34%;height:100%;background:linear-gradient(90deg,var(--gold),#e2c27e);border-radius:inherit}.walk-stats{display:flex;justify-content:space-between;color:var(--muted);font-size:12px}
+.music-list,.meal-list,.grocery-list{display:flex;flex-direction:column;gap:9px}.music-card,.meal-card,.grocery-card{border:1px solid var(--line);background:#12171d;border-radius:18px;padding:14px;display:flex;align-items:center;gap:12px}.cover{width:48px;height:48px;border-radius:14px;background:linear-gradient(145deg,#bb403b,#31212b);display:grid;place-items:center;font-size:20px}.music-copy,.meal-copy,.grocery-copy{flex:1;min-width:0}.music-copy p,.meal-copy p,.grocery-copy p{font-size:12px;color:var(--muted);margin-top:5px;line-height:1.4}.play{width:38px;height:38px;border-radius:50%;border:1px solid #35404b;background:#202730;color:white}
+.walk-live{display:none;text-align:center;padding:19px;border:1px solid rgba(85,201,142,.28);background:rgba(85,201,142,.06);border-radius:22px;margin-top:14px}.walk-live.show{display:block}.walk-time{font-size:43px;font-weight:950;letter-spacing:-1.5px;margin:9px}
+.goal-card{padding:17px;border:1px solid rgba(239,90,82,.25);background:linear-gradient(135deg,rgba(239,90,82,.09),rgba(239,90,82,.02));border-radius:20px}.macro-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:13px}.macro{padding:11px 5px;text-align:center;border-radius:14px;background:#141a20;border:1px solid #2a333d}.macro strong{display:block}.macro span{font-size:10px;color:var(--muted)}
+.store-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}.store{border:1px solid #303a46;background:#151b22;color:inherit;border-radius:18px;padding:14px;text-align:left}.store.active{border-color:rgba(239,90,82,.52);background:rgba(239,90,82,.08)}.store b{display:block}.store span{display:block;font-size:11px;color:var(--muted);margin-top:4px}
+.meal-time{width:48px;text-align:center;color:var(--gold);font-size:11px;font-weight:850}.meal-card b{display:block}.meal-kcal{font-size:12px;color:#e7ca91;font-weight:850}
+.grocery-check{width:34px;height:34px;border-radius:11px;border:1px solid #35404b;background:#1b222b;color:#8c96a1}.grocery-check.done{background:rgba(85,201,142,.13);border-color:rgba(85,201,142,.4);color:var(--green)}
+.location-list{display:none;margin-top:10px}.location-list.show{display:block}.location{padding:12px;border:1px solid #2c3540;background:#12171d;border-radius:14px;margin-top:7px;display:flex;justify-content:space-between;gap:10px;font-size:12px}
+.history-intro{padding:19px;border-radius:22px;border:1px solid #2c3540;background:linear-gradient(145deg,#181f27,#101419)}.history-list{display:flex;flex-direction:column;gap:9px}.history-card{border:1px solid var(--line);background:#12171d;border-radius:19px;overflow:hidden}.history-card button{width:100%;border:0;background:transparent;color:inherit;text-align:left;padding:15px;display:flex;align-items:center;gap:12px}.datebox{width:48px;height:53px;border-radius:14px;background:#1d242c;border:1px solid #303a45;display:grid;place-items:center;color:#929ba6;font-size:11px}.datebox b{display:block;color:#eef0f2;font-size:18px}.history-copy{flex:1}.history-copy p{font-size:12px;color:var(--muted);margin-top:4px}.delta{font-size:12px;color:var(--green);font-weight:850;text-align:right}
+.compare-card{border:1px solid var(--line);background:#11161c;border-radius:22px;padding:16px}.field{width:100%;border:1px solid #313b47;background:#171d24;color:white;border-radius:14px;padding:12px;outline:none}.field:focus{border-color:rgba(239,90,82,.65)}
+.compare-bars{display:flex;align-items:end;justify-content:space-around;height:170px;margin-top:16px;border-bottom:1px solid #343d48;padding:0 12px}.bar-group{width:31%;height:100%;display:flex;align-items:end;justify-content:center;gap:6px;position:relative}.bar{width:25px;border-radius:8px 8px 0 0;background:linear-gradient(#f06a62,#9f2b27);min-height:20px}.bar.prev{background:linear-gradient(#66717e,#39414b)}.bar-label{position:absolute;bottom:-25px;width:100%;text-align:center;color:var(--muted);font-size:10px}.legend{display:flex;gap:15px;justify-content:center;margin:33px 0 5px;font-size:11px;color:var(--muted)}.legend i{width:9px;height:9px;border-radius:3px;display:inline-block;margin-right:5px;background:var(--red)}.legend i.prev{background:#59636f}
+.compare-table{margin-top:14px;border:1px solid #29323c;border-radius:16px;overflow:hidden}.compare-row{display:grid;grid-template-columns:44px 1fr 1fr;gap:8px;padding:12px;border-bottom:1px solid #29323c;font-size:12px}.compare-row:last-child{border:0}.compare-row.head{color:#7f8994;text-transform:uppercase;font-size:10px;background:#161c22}
+.workout-active{text-align:center;padding:25px 10px}.workout-active h1{margin:8px 0}.set-grid{display:grid;grid-template-columns:50px 1fr 1fr 45px;gap:8px;align-items:center}.set-head{font-size:10px;text-transform:uppercase;color:#77818d;margin:16px 0 7px}.set-row{margin-bottom:8px}.set-check{height:43px;border-radius:12px;border:1px solid #35404b;background:#1c232b;color:#8c96a1}.set-check.done{color:var(--green);border-color:rgba(85,201,142,.4);background:rgba(85,201,142,.1)}
+.bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);z-index:50;width:min(100%,500px);display:grid;grid-template-columns:repeat(4,1fr);gap:5px;padding:9px 12px calc(9px + env(safe-area-inset-bottom));border-top:1px solid rgba(255,255,255,.07);background:rgba(9,11,14,.94);backdrop-filter:blur(20px)}
+.nav{border:0;background:transparent;color:#6e7883;border-radius:15px;padding:8px 2px 7px;font-size:10px;font-weight:800}.nav span{display:block;font-size:21px;margin-bottom:4px}.nav.active{color:white;background:#181e25}
+.toast{position:fixed;left:50%;bottom:112px;z-index:100;transform:translate(-50%,14px);width:calc(min(100%,500px) - 36px);padding:14px 16px;border-radius:15px;border:1px solid #35414c;background:#202730;box-shadow:var(--shadow);opacity:0;pointer-events:none;transition:.22s}.toast.show{opacity:1;transform:translate(-50%,0)}
+@media(min-width:700px){.app{margin-top:18px;border-radius:28px 28px 0 0;overflow:hidden;box-shadow:0 0 70px rgba(0,0,0,.5)}}
+</style>
 </head>
 <body>
 <div class="app">
-  <header class="topbar">
-    <div class="brand">
-      <div class="brand-mark">C</div>
-      <div class="brand-title">Camp<span>OS</span></div>
-    </div>
-    <div class="avatar">MB</div>
-  </header>
+<header class="topbar"><div class="brand"><div class="mark">C</div><b>Camp<span>OS</span></b></div><div class="avatar">MB</div></header>
 
-  <!-- HOME -->
-  <main id="home" class="screen active">
-    <div class="hero">
-      <div class="hero-kicker">
-        <span class="pill red">TODAY</span>
-        <span class="pill">Week 1 · Day 2</span>
-      </div>
-      <h1>Lower Body + Footwork</h1>
-      <p>Build your base without burying your recovery. Every movement, dose, and coaching cue is ready before you begin.</p>
-      <div class="hero-actions">
-        <button class="btn btn-primary" onclick="openPreview('wed')">Preview workout</button>
-        <button class="btn btn-secondary" onclick="openGuide(6)">Motion guides</button>
-      </div>
-    </div>
+<!-- HOME -->
+<main id="home" class="screen active">
+  <section class="hero">
+    <div><span class="pill red">TODAY</span> <span class="pill">Week 1 · Day 2</span></div>
+    <h1>Lower Body + Footwork</h1>
+    <p>Every movement, dose, motion guide, and coaching cue is ready before you begin.</p>
+    <div class="hero-actions"><button class="btn primary" onclick="openPreview('wed')">Preview workout</button><button class="btn secondary" onclick="startWorkout()">Start</button></div>
+  </section>
 
-    <div class="section-title"><h2>Readiness</h2><span class="pill gold">GOOD TO TRAIN</span></div>
-    <div class="card readiness">
-      <div class="ring"><strong>78</strong></div>
-      <div>
-        <div class="check-row"><span>Sleep</span><span class="muted">7h 34m</span></div>
-        <div class="check-row"><span>Soreness</span><span class="muted">Mild</span></div>
-        <div class="check-row"><span>Joint check</span><span class="status-dot"></span></div>
-      </div>
-    </div>
+  <div class="section-title"><h2>Readiness</h2><span class="pill gold">GOOD TO TRAIN</span></div>
+  <div class="card readiness">
+    <div class="ring"><strong>78</strong></div>
+    <div><div class="check-row"><span>Sleep</span><span class="muted">7h 34m</span></div><div class="check-row"><span>Soreness</span><span class="muted">Mild</span></div><div class="check-row"><span>Joint check</span><span style="color:var(--green)">●</span></div></div>
+  </div>
 
-    <div class="section-title"><h2>This week</h2><a href="#" onclick="showScreen('plan');return false">View plan</a></div>
-    <div class="week-strip">
-      <div class="day done">MON<b>✓</b></div>
-      <div class="day done">TUE<b>✓</b></div>
-      <div class="day today">WED<b>24</b></div>
-      <div class="day">THU<b>25</b></div>
-      <div class="day">FRI<b>26</b></div>
-      <div class="day">SAT<b>27</b></div>
-      <div class="day">SUN<b>28</b></div>
-    </div>
+  <div class="section-title"><h2>This week</h2><a href="#" onclick="showScreen('plan');return false">View plan</a></div>
+  <div class="week"><div class="day done">MON<b>✓</b></div><div class="day done">TUE<b>✓</b></div><div class="day today">WED<b>24</b></div><div class="day">THU<b>25</b></div><div class="day">FRI<b>26</b></div><div class="day">SAT<b>27</b></div><div class="day">SUN<b>28</b></div></div>
 
-    <div class="section-title"><h2>Current progress</h2><a href="#" onclick="showScreen('progress');return false">Full history</a></div>
-    <div class="grid-2">
-      <div class="card metric">
-        <span class="muted tiny">WORKOUTS</span>
-        <div class="value">7</div>
-        <div class="delta">↑ 2 vs prior week</div>
-      </div>
-      <div class="card metric">
-        <span class="muted tiny">CONSISTENCY</span>
-        <div class="value">86%</div>
-        <div class="delta">Best in 6 weeks</div>
-      </div>
-    </div>
+  <div class="section-title"><h2>Your CampOS</h2><span class="muted tiny">Tap a section</span></div>
+  <div class="quick-grid">
+    <button class="quick" onclick="showScreen('walk')"><div class="quick-icon">🚶</div><h3>Guided walk</h3><p>Choose your mood and get music matched to the walk.</p></button>
+    <button class="quick" onclick="showScreen('nutrition')"><div class="quick-icon">🥣</div><h3>Meal plan</h3><p>Personalized meals and a store-specific grocery list.</p></button>
+    <button class="quick" onclick="showScreen('history')"><div class="quick-icon">↗</div><h3>Past workouts</h3><p>Open sessions and compare pounds for every set.</p></button>
+    <button class="quick" onclick="showScreen('plan')"><div class="quick-icon">▦</div><h3>Weekly plan</h3><p>See every training and recovery day.</p></button>
+  </div>
 
-    <div class="section-title"><h2>Coach's note</h2></div>
-    <div class="banner">
-      <div class="banner-icon">🥊</div>
-      <div><h3>Win with control today</h3><p>Your lower back has been sensitive. Keep every rep smooth, stop before form changes, and report any pain—not ordinary effort or muscle fatigue.</p></div>
-    </div>
-  </main>
+  <div class="section-title"><h2>Coach's note</h2></div>
+  <div class="banner"><div>🥊</div><div><h3>Win with control today</h3><p>Keep every rep smooth and stop before form changes. Productive work beats forced work.</p></div></div>
+</main>
 
-  <!-- PLAN -->
-  <main id="plan" class="screen">
-    <div class="section-title" style="margin-top:4px"><div><div class="eyebrow">TRAINING PLAN</div><h1 style="margin-top:6px">Week 1</h1></div><span class="pill">Jul 22–28</span></div>
-    <div class="banner" style="margin:14px 0 18px">
-      <div class="banner-icon">◈</div>
-      <div><h3>Reconditioning phase</h3><p>Conservative volume, controlled effort, and room to recover. No failure training this week.</p></div>
-    </div>
+<!-- PLAN -->
+<main id="plan" class="screen">
+  <div class="section-title" style="margin-top:4px"><div><div class="eyebrow">TRAINING PLAN</div><h1 style="margin-top:6px">Week 1</h1></div><span class="pill">Jul 22–28</span></div>
+  <div class="banner" style="margin:14px 0 18px"><div>◈</div><div><h3>Reconditioning phase</h3><p>Controlled effort, conservative volume, and enough room to recover.</p></div></div>
+  <div id="planDays"></div>
+</main>
 
-    <div class="plan-day">
-      <button onclick="openPreview('mon')">
-        <div class="plan-date">MON<b>22</b></div>
-        <div class="plan-copy"><h3>Upper Body Foundation</h3><p>5 movements · 48 min · completed</p></div>
-        <span class="pill" style="color:var(--green)">✓</span>
-      </button>
-    </div>
-    <div class="plan-day recovery">
-      <button onclick="openPreview('tue')">
-        <div class="plan-date">TUE<b>23</b></div>
-        <div class="plan-copy"><h3>Recovery + Mobility</h3><p>Easy walk · mobility · completed</p></div>
-        <span class="pill" style="color:var(--green)">✓</span>
-      </button>
-    </div>
-    <div class="plan-day current">
-      <button onclick="openPreview('wed')">
-        <div class="plan-date">WED<b>24</b></div>
-        <div class="plan-copy"><h3>Lower Body + Footwork</h3><p>6 movements · 58 min · today</p></div>
-        <span class="pill red">START</span>
-      </button>
-    </div>
-    <div class="plan-day">
-      <button onclick="openPreview('thu')">
-        <div class="plan-date">THU<b>25</b></div>
-        <div class="plan-copy"><h3>Active Recovery</h3><p>Walking · mobility · optional sauna</p></div>
-        <span class="chev">›</span>
-      </button>
-    </div>
-    <div class="plan-day">
-      <button onclick="openPreview('fri')">
-        <div class="plan-date">FRI<b>26</b></div>
-        <div class="plan-copy"><h3>Full Body + Boxing</h3><p>6 movements · 64 min</p></div>
-        <span class="chev">›</span>
-      </button>
-    </div>
-    <div class="plan-day">
-      <button onclick="openPreview('sat')">
-        <div class="plan-date">SAT<b>27</b></div>
-        <div class="plan-copy"><h3>Light Boxing Skill</h3><p>Shadowboxing · footwork · 28 min</p></div>
-        <span class="chev">›</span>
-      </button>
-    </div>
-    <div class="plan-day recovery">
-      <button onclick="openPreview('sun')">
-        <div class="plan-date">SUN<b>28</b></div>
-        <div class="plan-copy"><h3>Full Recovery</h3><p>Walking · mobility · meal prep</p></div>
-        <span class="chev">›</span>
-      </button>
-    </div>
-  </main>
+<!-- PREVIEW -->
+<main id="preview" class="screen">
+  <div class="screen-head"><button class="back" onclick="showScreen(lastMain)">‹</button><div style="text-align:center"><div class="eyebrow">WORKOUT PREVIEW</div><h3 id="previewDay">Wednesday</h3></div><div class="head-space"></div></div>
+  <h1 id="previewTitle">Lower Body + Footwork</h1><p id="previewSubtitle" class="muted" style="margin-top:8px;line-height:1.45"></p>
+  <div class="preview-summary"><div class="mini"><strong id="previewMinutes">58</strong><span>MINUTES</span></div><div class="mini"><strong id="previewCount">6</strong><span>MOVEMENTS</span></div><div class="mini"><strong>6</strong><span>TARGET RPE</span></div></div>
+  <div class="banner"><div>↔</div><div><h3>Swipe through the full workout</h3><p>Every card includes the motion, setup, execution, mistakes, and safety guidance before you start.</p></div></div>
+  <p class="swipe-note">Swipe left or right through each exercise</p>
+  <div id="previewCarousel" class="preview-carousel"></div>
+  <div class="carousel-nav"><button onclick="movePreview(-1)">‹</button><div id="previewDots" class="dots"></div><button onclick="movePreview(1)">›</button></div>
+  <div class="sticky"><button class="btn primary full" onclick="startWorkout()">Start workout</button></div>
+</main>
 
-  <!-- PREVIEW -->
-  <main id="preview" class="screen">
-    <div class="screen-head">
-      <button class="back" onclick="showScreen(lastScreen)">‹</button>
-      <div style="text-align:center"><div class="eyebrow">WORKOUT PREVIEW</div><h3 id="previewDay">Wednesday</h3></div>
-      <div class="head-spacer"></div>
-    </div>
-    <div>
-      <h1 id="previewTitle">Lower Body + Footwork</h1>
-      <p class="muted" id="previewSubtitle" style="margin-top:8px;line-height:1.45">Controlled lower-body work followed by light movement practice.</p>
-    </div>
-    <div class="preview-summary">
-      <div class="mini"><strong id="previewMinutes">58</strong><span>MINUTES</span></div>
-      <div class="mini"><strong id="previewMoves">6</strong><span>MOVEMENTS</span></div>
-      <div class="mini"><strong>6</strong><span>TARGET RPE</span></div>
-    </div>
-    <div class="banner" style="margin-bottom:16px">
-      <div class="banner-icon">i</div>
-      <div><h3>Full dose preview</h3><p>Review every movement, set, rep target, rest period, coaching cue, and motion guide before starting.</p></div>
-    </div>
-    <div id="previewMovements"></div>
-    <div class="sticky-action"><button id="startWorkoutBtn" class="btn btn-primary full" onclick="startWorkout()">Start workout</button></div>
-  </main>
+<!-- WALK -->
+<main id="walk" class="screen">
+  <div class="section-title" style="margin-top:4px"><div><div class="eyebrow">GUIDED WALK</div><h1 style="margin-top:6px">Choose how you feel</h1></div><span class="pill gold">MUSIC</span></div>
+  <div class="walk-hero"><div class="eyebrow">TODAY'S RECOMMENDATION</div><h1 id="walkTitle">10-minute reset walk</h1><p class="muted" id="walkMessage">A calm pace with music that helps you settle down and finish the day with a win.</p><div class="walk-meter"><span id="walkMeter"></span></div><div class="walk-stats"><span id="walkDurationLabel">10 minutes</span><span>Easy pace · RPE 2–3</span></div></div>
 
-  <!-- ACTIVE WORKOUT -->
-  <main id="workout" class="screen">
-    <div class="screen-head">
-      <button class="back" onclick="confirmExitWorkout()">‹</button>
-      <div style="text-align:center"><div class="eyebrow">LIVE SESSION</div><h3>Lower Body + Footwork</h3></div>
-      <button class="back" onclick="openGuide(currentExerciseIndex)">?</button>
-    </div>
-    <div class="workout-header">
-      <div style="display:flex;justify-content:space-between"><span class="muted tiny">SESSION PROGRESS</span><span id="progressLabel" class="tiny">1 OF 6</span></div>
-      <div class="workout-progress"><span id="progressBar"></span></div>
-      <div style="display:flex;justify-content:space-between"><span class="muted tiny">Elapsed 12:18</span><span class="muted tiny">RPE target 6</span></div>
-    </div>
-    <div class="active-exercise">
-      <div class="count" id="exerciseCount">Movement 1 of 6</div>
-      <h1 id="activeName">Leg Press</h1>
-      <p id="activeDose">3 sets · 8 reps · 90 sec rest</p>
-    </div>
-    <button class="btn btn-secondary full" onclick="openGuide(currentExerciseIndex)">▶ Watch motion guide</button>
+  <div class="section-title"><h2>Your mood</h2></div>
+  <div id="moodChoices" class="choice-row">
+    <button class="choice" data-mood="upbeat" onclick="selectMood(this)">Upbeat</button><button class="choice" data-mood="tired" onclick="selectMood(this)">Tired</button><button class="choice active" data-mood="calm" onclick="selectMood(this)">Calm</button><button class="choice" data-mood="reflective" onclick="selectMood(this)">Reflective</button><button class="choice" data-mood="focused" onclick="selectMood(this)">Focused</button>
+  </div>
 
-    <div class="set-grid header">
-      <div>SET</div><div>LOAD</div><div>REPS</div><div>DONE</div>
-    </div>
-    <div id="setRows"></div>
+  <div class="section-title"><h2>Walk length</h2></div>
+  <div class="choice-row"><button class="choice active" data-min="10" onclick="selectDuration(this)">10 min</button><button class="choice" data-min="20" onclick="selectDuration(this)">20 min</button><button class="choice" data-min="30" onclick="selectDuration(this)">30 min</button></div>
 
-    <div class="rest">
-      <div class="tiny muted">REST TIMER</div>
-      <div class="time" id="restTime">01:30</div>
-      <div class="rest-controls">
-        <button onclick="adjustRest(-15)">−15</button>
-        <button id="restToggle" onclick="toggleRest()">Start</button>
-        <button onclick="adjustRest(15)">+15</button>
-      </div>
-    </div>
+  <div class="section-title"><h2>Music recommendations</h2><span class="pill">Spotify · Apple Music</span></div>
+  <div id="musicList" class="music-list"></div>
+  <button class="btn primary full" style="margin-top:14px" onclick="startWalk()">Start guided walk</button>
+  <div id="walkLive" class="walk-live"><div class="eyebrow">WALK IN PROGRESS</div><div id="walkTime" class="walk-time">10:00</div><p class="muted">Breathe naturally. Let your shoulders drop. You do not need to rush.</p><button class="btn secondary" style="margin-top:13px" onclick="toggleWalk()">Pause / Resume</button></div>
+</main>
 
-    <div class="pain-box">
-      <div style="display:flex;justify-content:space-between;align-items:center"><h3>Body check</h3><span class="pill">OPTIONAL</span></div>
-      <p class="muted tiny" style="margin-top:7px;line-height:1.45">Report sharp, unstable, radiating, or unusual pain. Normal effort and muscle fatigue are different.</p>
-      <div class="pain-scale">
-        <button onclick="selectPain(this,0)">0</button><button onclick="selectPain(this,1)">1</button><button onclick="selectPain(this,2)">2</button><button onclick="selectPain(this,3)">3</button><button onclick="selectPain(this,4)">4</button><button onclick="selectPain(this,5)">5+</button>
-      </div>
-      <select id="painLocation" class="field" style="text-align:left;margin-top:10px">
-        <option value="">Pain location</option>
-        <option>Lower back</option><option>Left knee</option><option>Right knee</option><option>Left wrist</option><option>Right wrist</option><option>Hip</option><option>Other</option>
-      </select>
-      <select id="painType" class="field" style="text-align:left;margin-top:8px">
-        <option value="">Pain type</option>
-        <option>Sharp</option><option>Pinching</option><option>Unstable / giving way</option><option>Radiating</option><option>Aching</option><option>Other</option>
-      </select>
-      <textarea id="painNotes" class="textarea" placeholder="What movement caused it? Did it improve after stopping or adjusting?"></textarea>
-    </div>
+<!-- NUTRITION -->
+<main id="nutrition" class="screen">
+  <div class="section-title" style="margin-top:4px"><div><div class="eyebrow">PERSONALIZED NUTRITION</div><h1 style="margin-top:6px">Your meal plan</h1></div><span class="pill red">CUT</span></div>
+  <div class="goal-card"><h3>Built around your current goals</h3><p class="muted tiny" style="margin-top:7px;line-height:1.45">High protein, simple foods, enough carbohydrates for boxing and lifting, and meals you are likely to repeat.</p><div class="macro-row"><div class="macro"><strong>2,100</strong><span>CALORIES</span></div><div class="macro"><strong>190 g</strong><span>PROTEIN</span></div><div class="macro"><strong>205 g</strong><span>CARBS</span></div></div></div>
 
-    <div class="sticky-action">
-      <button id="finishMovementBtn" class="btn btn-primary full" onclick="finishMovement()">Complete movement</button>
-    </div>
-  </main>
+  <div class="section-title"><h2>Today's meals</h2><button class="btn secondary" style="padding:9px 11px;min-height:39px" onclick="regenerateMeals()">Regenerate</button></div>
+  <div id="mealList" class="meal-list"></div>
 
-  <!-- PROGRESS -->
-  <main id="progress" class="screen">
-    <div class="section-title" style="margin-top:4px"><div><div class="eyebrow">PROGRESS</div><h1 style="margin-top:6px">Built over time</h1></div><button class="btn btn-secondary" style="padding:10px 12px;min-height:40px" onclick="openMeasure()">+ Log</button></div>
-    <div class="tabs" id="chartTabs">
-      <button class="active" data-range="4w" onclick="setRange(this)">4 weeks</button>
-      <button data-range="6m" onclick="setRange(this)">6 months</button>
-      <button data-range="1y" onclick="setRange(this)">1 year</button>
-      <button data-range="all" onclick="setRange(this)">All time</button>
-    </div>
-    <div class="chart-card">
-      <div class="chart-top">
-        <div><span class="muted tiny">TRAINING VOLUME</span><div class="chart-value" id="chartValue">18,420 lb</div><div class="chart-delta" id="chartDelta">↑ 14% vs previous 4 weeks</div></div>
-        <span class="pill gold">LOAD</span>
-      </div>
-      <svg id="chart" viewBox="0 0 420 185" preserveAspectRatio="none" aria-label="Progress graph">
-        <defs><linearGradient id="areaGradient" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#ef5b52" stop-opacity=".25"/><stop offset="100%" stop-color="#ef5b52" stop-opacity="0"/></linearGradient></defs>
-        <line class="chart-grid" x1="0" y1="35" x2="420" y2="35"/><line class="chart-grid" x1="0" y1="90" x2="420" y2="90"/><line class="chart-grid" x1="0" y1="145" x2="420" y2="145"/>
-        <path id="chartArea" class="chart-area" d=""></path>
-        <path id="chartLine" class="chart-line" d=""></path>
-        <g id="chartDots"></g>
-      </svg>
-    </div>
-    <div class="positive-card">
-      <h3>Consistency is becoming visible</h3>
-      <p>You completed two more sessions than the prior period while keeping your average effort controlled. That is productive momentum—not just more fatigue.</p>
-    </div>
+  <div class="section-title"><h2>Select your store</h2><span class="muted tiny">List updates instantly</span></div>
+  <div id="storeGrid" class="store-grid">
+    <button class="store active" data-store="aldi" onclick="selectStore(this)"><b>Aldi</b><span>Best budget match</span></button>
+    <button class="store" data-store="publix" onclick="selectStore(this)"><b>Publix</b><span>Convenient prepared options</span></button>
+    <button class="store" data-store="walmart" onclick="selectStore(this)"><b>Walmart</b><span>Large selection</span></button>
+    <button class="store" data-store="target" onclick="selectStore(this)"><b>Target</b><span>Quick essentials</span></button>
+  </div>
+  <button class="btn ghost full" style="margin-top:9px" onclick="toggleLocations()">Show all nearby Aldi options</button>
+  <div id="locationList" class="location-list">
+    <div class="location"><span>Aldi · Estero demo option</span><b>Closest</b></div><div class="location"><span>Aldi · Naples demo option</span><span class="muted">Alternate</span></div><div class="location"><span>Aldi · Fort Myers demo option</span><span class="muted">Alternate</span></div>
+  </div>
 
-    <div class="section-title"><h2>Workout history</h2><span class="muted tiny">Tap for details</span></div>
-    <div id="historyList">
-      <div class="history-card">
-        <button onclick="openHistory(0)">
-          <div class="history-date">JUL<b>22</b></div>
-          <div class="history-copy"><h3>Upper Body Foundation</h3><p>48 min · 5 movements · RPE 6</p></div>
-          <div class="history-delta">+8.3%<br><span class="muted">load</span></div>
-        </button>
-      </div>
-      <div class="history-card">
-        <button onclick="openHistory(1)">
-          <div class="history-date">JUL<b>19</b></div>
-          <div class="history-copy"><h3>Full Body Re-entry</h3><p>54 min · 6 movements · RPE 6</p></div>
-          <div class="history-delta">+1 set<br><span class="muted">quality</span></div>
-        </button>
-      </div>
-      <div class="history-card">
-        <button onclick="openHistory(2)">
-          <div class="history-date">JUL<b>17</b></div>
-          <div class="history-copy"><h3>Boxing Skill Session</h3><p>31 min · 4 rounds · light pace</p></div>
-          <div class="history-delta">+6 min<br><span class="muted">duration</span></div>
-        </button>
-      </div>
-    </div>
-  </main>
+  <div class="section-title"><h2 id="groceryTitle">Aldi grocery list</h2><span id="groceryCost" class="pill gold">$72 est.</span></div>
+  <div id="groceryList" class="grocery-list"></div>
+  <button class="btn primary full" style="margin-top:13px" onclick="toast('Grocery list saved to your CampOS plan.')">Save grocery list</button>
+</main>
 
-  <!-- PROFILE -->
-  <main id="profile" class="screen">
-    <div class="section-title" style="margin-top:4px"><div><div class="eyebrow">ATHLETE PROFILE</div><h1 style="margin-top:6px">Michael</h1></div></div>
-    <div class="card" style="padding:20px">
-      <div style="display:flex;gap:15px;align-items:center">
-        <div class="avatar" style="width:64px;height:64px;font-size:20px">MB</div>
-        <div><h2>Reconditioning Camp</h2><p class="muted" style="margin-top:5px">Boxing · strength · conditioning</p></div>
-      </div>
-    </div>
-    <div class="section-title"><h2>Current standards</h2></div>
-    <div class="card">
-      <div class="check-row"><span>Training effort</span><span class="pill">RPE 6</span></div>
-      <div class="check-row"><span>Protein target</span><span class="muted">180–200 g</span></div>
-      <div class="check-row"><span>Calorie range</span><span class="muted">2,000–2,200</span></div>
-      <div class="check-row"><span>Daily movement</span><span class="muted">8k–10k steps</span></div>
-      <div class="check-row"><span>Sleep target</span><span class="muted">7.5–9 hr</span></div>
-    </div>
-    <div class="section-title"><h2>Training priorities</h2></div>
-    <div class="workout-list">
-      <div class="workout-item"><div class="workout-icon">1</div><div class="workout-info"><h3>Conditioning</h3><p>Build the engine without overwhelming recovery.</p></div></div>
-      <div class="workout-item"><div class="workout-icon">2</div><div class="workout-info"><h3>Boxing performance</h3><p>Compact pressure, head movement, fast feet, angles.</p></div></div>
-      <div class="workout-item"><div class="workout-icon">3</div><div class="workout-info"><h3>Athletic physique</h3><p>Upper chest, shoulders, back, legs, and core.</p></div></div>
-    </div>
-  </main>
+<!-- HISTORY -->
+<main id="history" class="screen">
+  <div class="screen-head"><button class="back" onclick="showScreen('home')">‹</button><div style="text-align:center"><div class="eyebrow">WORKOUT HISTORY</div><h3>Past sessions</h3></div><div class="head-space"></div></div>
+  <div class="history-intro"><h1>Compare what you actually lifted</h1><p class="muted" style="margin-top:8px;line-height:1.46">Open any workout, then compare the pounds used in every set of a selected exercise.</p></div>
+  <div class="section-title"><h2>Recent workouts</h2><span class="muted tiny">Tap to load</span></div>
+  <div id="historyList" class="history-list"></div>
+
+  <div class="section-title"><h2>Exercise comparison</h2><span class="pill gold">PER SET</span></div>
+  <div class="compare-card">
+    <label class="tiny muted">Exercise</label>
+    <select id="exerciseSelect" class="field" style="margin-top:7px" onchange="renderComparison()">
+      <option>Leg Press</option><option>Incline Chest Press</option><option>Chest-Supported Row</option><option>Landmine Press</option>
+    </select>
+    <div class="compare-bars" id="compareBars"></div>
+    <div class="legend"><span><i class="prev"></i>Previous workout</span><span><i></i>Selected workout</span></div>
+    <div id="compareTable" class="compare-table"></div>
+  </div>
+</main>
+
+<!-- ACTIVE WORKOUT -->
+<main id="workout" class="screen">
+  <div class="screen-head"><button class="back" onclick="showScreen('home')">‹</button><div style="text-align:center"><div class="eyebrow">LIVE SESSION</div><h3>Lower Body + Footwork</h3></div><div class="head-space"></div></div>
+  <div class="workout-active"><div class="eyebrow" id="exerciseCounter">MOVEMENT 1 OF 6</div><h1 id="activeExercise">Leg Press</h1><p id="activeDose" class="muted"></p></div>
+  <button class="btn secondary full" onclick="openPreview('wed')">↔ Review swipeable motion guide</button>
+  <div class="set-grid set-head"><div>SET</div><div>POUNDS</div><div>REPS</div><div>DONE</div></div>
+  <div id="setRows"></div>
+  <div class="sticky"><button class="btn primary full" onclick="completeExercise()">Complete movement</button></div>
+</main>
 </div>
 
 <nav class="bottom-nav">
-  <button class="nav-btn active" data-target="home" onclick="showScreen('home',this)"><span class="nav-icon">⌂</span>Today</button>
-  <button class="nav-btn" data-target="plan" onclick="showScreen('plan',this)"><span class="nav-icon">▦</span>Plan</button>
-  <button class="nav-btn" data-target="progress" onclick="showScreen('progress',this)"><span class="nav-icon">↗</span>Progress</button>
-  <button class="nav-btn" data-target="profile" onclick="showScreen('profile',this)"><span class="nav-icon">◎</span>Profile</button>
+  <button class="nav active" data-target="home" onclick="showScreen('home',this)"><span>⌂</span>Today</button>
+  <button class="nav" data-target="plan" onclick="showScreen('plan',this)"><span>▦</span>Plan</button>
+  <button class="nav" data-target="walk" onclick="showScreen('walk',this)"><span>♪</span>Walk</button>
+  <button class="nav" data-target="nutrition" onclick="showScreen('nutrition',this)"><span>◉</span>Meals</button>
 </nav>
-
-<!-- GUIDE MODAL -->
-<div id="guideModal" class="modal" onclick="modalBackdrop(event,'guideModal')">
-  <div class="sheet">
-    <div class="grab"></div>
-    <div class="sheet-head">
-      <div><div class="eyebrow">MOTION GUIDE</div><h2 id="guideTitle" style="margin-top:5px">Leg Press</h2></div>
-      <button class="close" onclick="closeModal('guideModal')">×</button>
-    </div>
-    <div id="motionStage" class="motion-stage playing"></div>
-    <div class="guide-controls">
-      <button id="playGuideBtn" class="btn btn-secondary" onclick="toggleGuide()">Pause motion</button>
-      <button class="btn btn-ghost" onclick="restartGuide()">Restart</button>
-    </div>
-    <div class="guide-section"><h3>Setup</h3><p id="guideSetup"></p></div>
-    <div class="guide-section"><h3>Execution</h3><p id="guideExecution"></p></div>
-    <div class="guide-section"><h3>Common mistakes</h3><ul id="guideMistakes"></ul></div>
-    <div class="guide-section"><h3>Safety stop</h3><p id="guideSafety"></p></div>
-  </div>
-</div>
-
-<!-- HISTORY MODAL -->
-<div id="historyModal" class="modal" onclick="modalBackdrop(event,'historyModal')">
-  <div class="sheet">
-    <div class="grab"></div>
-    <div class="sheet-head">
-      <div><div class="eyebrow">SESSION DETAILS</div><h2 id="historyTitle" style="margin-top:5px"></h2></div>
-      <button class="close" onclick="closeModal('historyModal')">×</button>
-    </div>
-    <p id="historyMeta" class="muted" style="margin-top:8px"></p>
-    <div id="historyDetails" class="detail-table"></div>
-    <div class="positive-card">
-      <h3 id="historyPositiveTitle">Progress confirmed</h3>
-      <p id="historyPositive"></p>
-    </div>
-  </div>
-</div>
-
-<!-- MEASUREMENT MODAL -->
-<div id="measureModal" class="modal" onclick="modalBackdrop(event,'measureModal')">
-  <div class="sheet">
-    <div class="grab"></div>
-    <div class="sheet-head">
-      <div><div class="eyebrow">NEW CHECK-IN</div><h2 style="margin-top:5px">Log measurements</h2></div>
-      <button class="close" onclick="closeModal('measureModal')">×</button>
-    </div>
-    <p class="muted" style="margin:8px 0 18px;line-height:1.45">Use consistent timing, lighting, and conditions. One measurement is information—not a verdict.</p>
-    <div class="measure-form">
-      <label><span>Body weight</span><input id="weightInput" class="field" type="number" inputmode="decimal" placeholder="190.0"></label>
-      <label><span>Waist</span><input id="waistInput" class="field" type="number" inputmode="decimal" placeholder="inches"></label>
-      <label><span>Energy (1–10)</span><input id="energyInput" class="field" type="number" min="1" max="10" placeholder="7"></label>
-      <label><span>Sleep</span><input id="sleepInput" class="field" type="number" inputmode="decimal" placeholder="hours"></label>
-      <label class="wide"><span>Notes</span><textarea id="measureNotes" class="textarea" placeholder="How training, recovery, and appetite felt..."></textarea></label>
-    </div>
-    <button id="saveMeasureBtn" class="btn btn-primary full" style="margin-top:15px" onclick="saveMeasure()">Save check-in</button>
-  </div>
-</div>
-
 <div id="toast" class="toast"></div>
 
 <script>
-const plans = {
-  mon:{day:"Monday",title:"Upper Body Foundation",subtitle:"Controlled pressing and pulling to rebuild consistency.",minutes:48,movements:[
-    ["Incline Chest Press","3 sets · 8 reps · 90 sec rest",0,"Stop with about 4 good reps left."],
-    ["Cable Fly","2 sets · 12 reps · 60 sec rest",1,"Smooth stretch. No shoulder dumping."],
-    ["Landmine Press","3 sets · 8/side · 75 sec rest",2,"Ribs down and reach naturally."],
-    ["Cable Lateral Raise","2 sets · 12/side · 60 sec rest",3,"Lead with the elbow, not the hand."],
-    ["Chest-Supported Row","3 sets · 10 reps · 75 sec rest",4,"Pause briefly with shoulder blades back."]
-  ]},
-  tue:{day:"Tuesday",title:"Recovery + Mobility",subtitle:"Low-intensity movement to support joints, circulation, and readiness.",minutes:35,movements:[
-    ["Easy Walk","20 minutes · conversational pace",7,"Finish feeling better than you started."],
-    ["Hip Mobility","2 rounds · controlled",5,"No forcing range or bouncing."],
-    ["Thoracic Rotation","2 sets · 6/side",3,"Move through the upper back."],
-    ["Wrist + Forearm Care","2 gentle rounds",4,"Avoid positions that reproduce popping or instability."]
-  ]},
-  wed:{day:"Wednesday",title:"Lower Body + Footwork",subtitle:"Controlled lower-body work followed by light movement practice.",minutes:58,movements:[
-    ["Leg Press","3 sets · 8 reps · 90 sec rest",0,"Use a depth that keeps your pelvis controlled."],
-    ["Romanian Deadlift","2 sets · 8 reps · 90 sec rest",1,"Hips back. Stop before the lower back takes over."],
-    ["Reverse Lunge","2 sets · 8/side · 75 sec rest",2,"Use support if the knee feels unstable."],
-    ["Seated Leg Curl","2 sets · 12 reps · 60 sec rest",3,"Control the return; do not snap the knees straight."],
-    ["Standing Calf Raise","3 sets · 12 reps · 60 sec rest",4,"Full controlled range without bouncing."],
-    ["Light Boxing Footwork","3 rounds · 2 min · 1 min rest",6,"Quiet feet, relaxed shoulders, no hard punches."]
-  ]},
-  thu:{day:"Thursday",title:"Active Recovery",subtitle:"Walking, mobility, and optional heat for recovery—not punishment.",minutes:40,movements:[
-    ["Easy Walk","20–30 minutes · relaxed",7,"Use a pace that lowers stress."],
-    ["Recovery Mobility","15 minutes · RPE 2–3",5,"Hips, hamstrings, calves, thoracic spine, chest, wrists."],
-    ["Optional Sauna","10–20 minutes",7,"Hydrate and leave before dizziness or overheating."]
-  ]},
-  fri:{day:"Friday",title:"Full Body + Boxing",subtitle:"A balanced strength session with technically clean boxing rounds.",minutes:64,movements:[
-    ["Machine Chest Press","3 sets · 8 reps · 90 sec rest",0,"Controlled pressing; no grinding."],
-    ["Chest-Supported Row","3 sets · 10 reps · 75 sec rest",4,"Keep the torso supported."],
-    ["Leg Press","2 sets · 10 reps · 90 sec rest",0,"Moderate dose after Wednesday."],
-    ["Landmine Press","2 sets · 8/side · 75 sec rest",2,"Smooth diagonal press."],
-    ["Dead Bug","2 sets · 6/side · 45 sec rest",5,"Stop if the lower back arches."],
-    ["Shadowboxing","4 rounds · 2 min · 1 min rest",6,"Head movement, fast feet, controlled pace."]
-  ]},
-  sat:{day:"Saturday",title:"Light Boxing Skill",subtitle:"Easy technical practice focused on rhythm and positioning.",minutes:28,movements:[
-    ["Shadowboxing Warm-up","2 rounds · light",6,"Relax before adding speed."],
-    ["Entry + Exit Footwork","3 rounds · 2 min",6,"Step in balanced and leave on an angle."],
-    ["Defense Flow","2 rounds · 2 min",6,"Slip, roll, reset guard."],
-    ["Cooldown Breathing","3 minutes",7,"Lower the heart rate before finishing."]
-  ]},
-  sun:{day:"Sunday",title:"Full Recovery",subtitle:"Restore readiness and prepare the next week.",minutes:35,movements:[
-    ["Easy Steps","Spread through the day",7,"Comfortable walking only."],
-    ["Full Mobility","20 minutes · RPE 2–3",5,"No sharp pain or aggressive stretching."],
-    ["Meal Preparation","Prepare simple protein staples",7,"Make the next decision easier."],
-    ["Early Wind-down","Begin 60 min before bed",7,"Reduce stimulation and protect sleep."]
-  ]}
+const plans={
+ mon:{day:"Monday",title:"Upper Body Foundation",subtitle:"Controlled pressing and pulling to rebuild consistency.",minutes:48,movements:[
+  ["Incline Chest Press","3 sets · 8 reps · 90 sec rest",0],["Cable Fly","2 sets · 12 reps · 60 sec rest",1],["Landmine Press","3 sets · 8/side · 75 sec rest",2],["Cable Lateral Raise","2 sets · 12/side · 60 sec rest",3],["Chest-Supported Row","3 sets · 10 reps · 75 sec rest",4]]},
+ tue:{day:"Tuesday",title:"Recovery + Mobility",subtitle:"Low-intensity movement to support joints, circulation, and readiness.",minutes:35,movements:[
+  ["Easy Walk","20 minutes · conversational pace",7],["Hip Mobility","2 rounds · controlled",5],["Thoracic Rotation","2 sets · 6/side",3],["Wrist + Forearm Care","2 gentle rounds",4]]},
+ wed:{day:"Wednesday",title:"Lower Body + Footwork",subtitle:"Controlled lower-body work followed by light movement practice.",minutes:58,movements:[
+  ["Leg Press","3 sets · 8 reps · 90 sec rest",0],["Romanian Deadlift","2 sets · 8 reps · 90 sec rest",1],["Reverse Lunge","2 sets · 8/side · 75 sec rest",2],["Seated Leg Curl","2 sets · 12 reps · 60 sec rest",3],["Standing Calf Raise","3 sets · 12 reps · 60 sec rest",4],["Boxing Footwork","3 rounds · 2 min · 1 min rest",6]]},
+ thu:{day:"Thursday",title:"Active Recovery",subtitle:"Walking, mobility, and optional heat for recovery—not punishment.",minutes:40,movements:[
+  ["Easy Walk","20–30 minutes · relaxed",7],["Recovery Mobility","15 minutes · RPE 2–3",5],["Optional Sauna","10–20 minutes",7]]},
+ fri:{day:"Friday",title:"Full Body + Boxing",subtitle:"A balanced strength session with technically clean boxing rounds.",minutes:64,movements:[
+  ["Machine Chest Press","3 sets · 8 reps · 90 sec rest",0],["Chest-Supported Row","3 sets · 10 reps · 75 sec rest",4],["Leg Press","2 sets · 10 reps · 90 sec rest",0],["Landmine Press","2 sets · 8/side · 75 sec rest",2],["Dead Bug","2 sets · 6/side · 45 sec rest",5],["Shadowboxing","4 rounds · 2 min · 1 min rest",6]]},
+ sat:{day:"Saturday",title:"Light Boxing Skill",subtitle:"Easy technical practice focused on rhythm and positioning.",minutes:28,movements:[
+  ["Shadowboxing Warm-up","2 rounds · light",6],["Entry + Exit Footwork","3 rounds · 2 min",6],["Defense Flow","2 rounds · 2 min",6],["Cooldown Breathing","3 minutes",7]]},
+ sun:{day:"Sunday",title:"Full Recovery",subtitle:"Restore readiness and prepare the next week.",minutes:35,movements:[
+  ["Easy Steps","Spread through the day",7],["Full Mobility","20 minutes · RPE 2–3",5],["Meal Preparation","Prepare protein staples",7],["Early Wind-down","Begin 60 min before bed",7]]}
 };
-
-const guides = [
- {title:"Leg Press",setup:"Set your feet about shoulder-width on the platform. Keep your entire back and pelvis supported by the pad.",execution:"Lower with control until you reach a depth you can own, then press through the whole foot without locking the knees hard.",mistakes:["Pelvis curling away from the pad","Knees collapsing inward","Dropping too deep for your current mobility"],safety:"Stop for sharp knee, hip, or lower-back pain, or if the knee feels unstable.",type:0},
- {title:"Romanian Deadlift",setup:"Stand tall with the load close to your thighs, knees softly bent, ribs stacked over the pelvis.",execution:"Push the hips backward while keeping the load close. Stop when the hamstrings are loaded and your spine can stay controlled.",mistakes:["Turning it into a squat","Letting the weight drift forward","Chasing depth after the back begins rounding"],safety:"Stop if discomfort becomes sharp, radiates, or concentrates in the lower back.",type:1},
- {title:"Reverse Lunge",setup:"Stand tall near a stable support. Keep the front foot fully planted.",execution:"Step backward softly, lower under control, then drive through the front foot to return.",mistakes:["Front knee collapsing inward","Narrow tightrope stance","Pushing hard off the back foot"],safety:"Use support or shorten the range if the knee feels unstable or buckles.",type:2},
- {title:"Seated Leg Curl",setup:"Align the machine pivot with your knee and secure the thigh pad comfortably.",execution:"Curl smoothly, pause briefly, then control the return without snapping the knees straight.",mistakes:["Lifting the hips","Using momentum","Letting the stack slam"],safety:"Stop for sharp pain behind or inside the knee.",type:3},
- {title:"Standing Calf Raise",setup:"Stand tall with the ball of the foot supported and a stable hand position.",execution:"Lower the heel under control, rise fully, pause, and return without bouncing.",mistakes:["Rolling onto the outer foot","Bouncing through the bottom","Bending the knees excessively"],safety:"Reduce range if the Achilles or foot feels pinched or sharply painful.",type:4},
- {title:"Dead Bug",setup:"Lie on your back with hips and knees bent. Gently bring the ribs down so the lower back stays comfortably supported.",execution:"Move one arm and the opposite leg away only as far as you can without the back arching.",mistakes:["Forcing the back flat aggressively","Moving too fast","Extending farther than your core can control"],safety:"Stop or shorten the range if you feel the movement primarily in the lower back.",type:5},
- {title:"Boxing Footwork",setup:"Use an orthodox stance: left foot forward, feet under you, knees soft, hands relaxed at guard.",execution:"Push from the floor, keep your stance width, and let the rear foot follow without crossing.",mistakes:["Feet crossing","Standing too tall","Reaching with the lead foot and leaving the rear foot behind"],safety:"Keep the round light if the knee, back, or wrist is irritated. No hard punches are required.",type:6},
- {title:"Recovery Walk + Breathing",setup:"Choose an easy pace and let the shoulders drop. Keep your breathing calm and natural.",execution:"Walk smoothly, gradually lengthen the exhale, and finish with more calm than you started.",mistakes:["Turning recovery into conditioning","Wearing too much heat in hot weather","Ignoring dizziness or nausea"],safety:"Stop in a safe place if you feel faint, overheated, unusually short of breath, or unwell.",type:7}
+const guides=[
+ {title:"Leg Press",setup:"Place your feet about shoulder-width on the platform and keep your back and pelvis supported.",execution:"Lower under control to a depth you can own, then press through the whole foot without locking hard.",mistakes:["Pelvis curling away from the pad","Knees collapsing inward","Dropping deeper than you can control"],safety:"Stop for sharp knee, hip, or lower-back pain, or if the knee feels unstable.",type:0},
+ {title:"Romanian Deadlift",setup:"Stand tall with the load close to your thighs, knees softly bent, and ribs stacked.",execution:"Push the hips backward while keeping the weight close. Stop when the hamstrings are loaded and your spine remains controlled.",mistakes:["Turning it into a squat","Letting the weight drift forward","Chasing depth after the back rounds"],safety:"Stop if pain becomes sharp, radiates, or concentrates in the lower back.",type:1},
+ {title:"Reverse Lunge",setup:"Stand tall near a stable support and keep the front foot fully planted.",execution:"Step backward softly, lower under control, then drive through the front foot to return.",mistakes:["Front knee collapsing inward","Using a tightrope stance","Pushing hard off the back foot"],safety:"Use support or shorten the range if the knee feels unstable.",type:2},
+ {title:"Seated Leg Curl",setup:"Align the machine pivot with your knee and secure the thigh pad comfortably.",execution:"Curl smoothly, pause, and control the return without snapping the knees straight.",mistakes:["Lifting the hips","Using momentum","Letting the stack slam"],safety:"Stop for sharp pain behind or inside the knee.",type:3},
+ {title:"Standing Calf Raise",setup:"Stand tall with the ball of the foot supported and a stable hand position.",execution:"Lower the heel under control, rise fully, pause, and return without bouncing.",mistakes:["Rolling onto the outer foot","Bouncing at the bottom","Bending the knees excessively"],safety:"Reduce range if the Achilles or foot feels pinched or sharply painful.",type:4},
+ {title:"Dead Bug / Mobility",setup:"Keep the ribs gently down and use only a range your trunk can control.",execution:"Move slowly and breathe out through the hardest part of the motion.",mistakes:["Forcing range","Holding your breath","Allowing the lower back to arch"],safety:"Shorten the range if the lower back becomes the main working area.",type:5},
+ {title:"Boxing Footwork",setup:"Use an orthodox stance: left foot forward, feet under you, knees soft, hands relaxed at guard.",execution:"Push from the floor, preserve stance width, and let the rear foot follow without crossing.",mistakes:["Feet crossing","Standing too tall","Leaving the rear foot behind"],safety:"Keep the round light if the knee, back, or wrist is irritated.",type:6},
+ {title:"Recovery Walk",setup:"Choose an easy pace and let your shoulders drop.",execution:"Walk smoothly, breathe naturally, and finish calmer than you started.",mistakes:["Turning recovery into conditioning","Overheating","Ignoring dizziness or nausea"],safety:"Stop in a safe place if you feel faint, overheated, or unusually short of breath.",type:7}
 ];
-
-const history = [
- {title:"Upper Body Foundation",meta:"July 22 · 48 minutes · Average RPE 6",rows:[["Incline Chest Press","70 lb × 8 × 3","Previous: 65 lb × 8 × 3","↑ 7.7% load"],["Chest-Supported Row","75 lb × 10 × 3","Previous: 70 lb × 10 × 3","↑ 7.1% load"],["Cable Lateral Raise","10 lb × 12 × 2","Previous: same","Technique improved"]],positive:"You increased load on two movements without increasing average effort. That is controlled progression."},
- {title:"Full Body Re-entry",meta:"July 19 · 54 minutes · Average RPE 6",rows:[["Machine Chest Press","60 lb × 10 × 3","Previous: 60 lb × 10 × 2","↑ 1 quality set"],["Leg Press","180 lb × 10 × 2","Previous: 170 lb × 10 × 2","↑ 5.9% load"],["Session completion","100%","Previous: 83%","+17 points"]],positive:"The biggest win was completing the full planned dose while staying out of failure."},
- {title:"Boxing Skill Session",meta:"July 17 · 31 minutes · Light pace",rows:[["Shadowboxing","4 × 2 min","Previous: 3 × 2 min","+1 round"],["Footwork rounds","3 × 2 min","Previous: 2 × 2 min","+1 round"],["Pain report","0/5","Previous: 1/5","Improved"]],positive:"You added useful technical time without increasing pain. That is exactly how skill volume should grow."}
+const planMeta=[["MON","22","Upper Body Foundation","5 movements · 48 min","mon","done"],["TUE","23","Recovery + Mobility","Easy walk · mobility","tue","done"],["WED","24","Lower Body + Footwork","6 movements · 58 min","wed","current"],["THU","25","Active Recovery","Walking · mobility","thu",""],["FRI","26","Full Body + Boxing","6 movements · 64 min","fri",""],["SAT","27","Light Boxing Skill","Shadowboxing · footwork","sat",""],["SUN","28","Full Recovery","Walking · mobility · meal prep","sun",""]];
+const moodMusic={
+ upbeat:[["Can't Hold Us","Macklemore & Ryan Lewis","High-energy opener"],["The Light","Juice WRLD","Uplifting momentum"],["POWER","Kanye West","Strong finish"]],
+ tired:[["Good Days","SZA","Easy first steps"],["Sunflower","Post Malone & Swae Lee","Gentle rhythm"],["Location","Khalid","Low-pressure pace"]],
+ calm:[["Passionfruit","Drake","Smooth walking tempo"],["Best Part","Daniel Caesar feat. H.E.R.","Calm and grounded"],["Get You","Daniel Caesar feat. Kali Uchis","Slow finish"]],
+ reflective:[["Wishing Well","Juice WRLD","Reflective energy"],["Street Lights","Kanye West","Quiet processing"],["Pink + White","Frank Ocean","Clear-headed finish"]],
+ focused:[["Money Trees","Kendrick Lamar","Steady rhythm"],["The Recipe","Kendrick Lamar feat. Dr. Dre","Controlled energy"],["Chicago Freestyle","Drake feat. Giveon","Locked-in pace"]]
+};
+const meals=[
+ ["BREAKFAST","Protein oatmeal + eggs","Oats, whey, strawberries, 3 eggs","610 kcal · 53 g protein"],
+ ["LUNCH","Chicken rice bowl","Chicken breast, jasmine rice, mixed vegetables","620 kcal · 58 g protein"],
+ ["SNACK","Greek yogurt crunch","Oikos, granola, strawberries","320 kcal · 29 g protein"],
+ ["DINNER","Lean beef + potatoes","93% lean beef, roasted potatoes, green beans","550 kcal · 50 g protein"]
 ];
+const stores={
+ aldi:{name:"Aldi",cost:"$72 est.",items:[["Chicken breast","5 lb family pack"],["93% lean ground beef","2 lb"],["Large eggs","18 count"],["Greek yogurt","7 cups"],["Old-fashioned oats","1 container"],["Jasmine rice","5 lb bag"],["Strawberries","2 cartons"],["Frozen mixed vegetables","3 bags"],["Potatoes","5 lb bag"],["Granola","1 bag"],["Protein shakes","4 pack"]]},
+ publix:{name:"Publix",cost:"$91 est.",items:[["Chicken breast","5 lb"],["Lean ground beef","2 lb"],["Eggs","18 count"],["Oikos Greek yogurt","7 cups"],["Oats","1 container"],["Microwave jasmine rice","6 packs"],["Strawberries","2 cartons"],["Steam-in-bag vegetables","5 bags"],["Baby potatoes","2 bags"],["Granola","1 bag"]]},
+ walmart:{name:"Walmart",cost:"$76 est.",items:[["Chicken breast","5 lb"],["93% lean beef","2 lb"],["Eggs","18 count"],["Greek yogurt","large tub + cups"],["Oats","42 oz"],["Jasmine rice","5 lb"],["Frozen strawberries","1 bag"],["Mixed vegetables","4 bags"],["Russet potatoes","5 lb"],["Protein shakes","4 pack"]]},
+ target:{name:"Target",cost:"$84 est.",items:[["Good & Gather chicken","4 lb"],["Lean ground beef","2 lb"],["Eggs","18 count"],["Greek yogurt","7 cups"],["Oats","1 container"],["Ready rice","6 packs"],["Strawberries","2 cartons"],["Frozen vegetables","4 bags"],["Potatoes","1 bag"],["Granola","1 bag"]]}
+};
+const workouts=[
+ {date:["JUL","22"],title:"Upper Body Foundation",meta:"48 min · 5 movements · RPE 6",delta:"+8.3% load"},
+ {date:["JUL","19"],title:"Full Body Re-entry",meta:"54 min · 6 movements · RPE 6",delta:"+1 set"},
+ {date:["JUL","17"],title:"Boxing Skill Session",meta:"31 min · 4 rounds · light",delta:"+6 min"}
+];
+const comparisons={
+ "Leg Press":{sets:["Set 1","Set 2","Set 3"],prev:[170,170,160],now:[180,180,170]},
+ "Incline Chest Press":{sets:["Set 1","Set 2","Set 3"],prev:[65,65,60],now:[70,70,65]},
+ "Chest-Supported Row":{sets:["Set 1","Set 2","Set 3"],prev:[70,70,65],now:[75,75,70]},
+ "Landmine Press":{sets:["Set 1","Set 2","Set 3"],prev:[35,35,30],now:[40,40,35]}
+};
+let lastMain="home",currentPlan="wed",previewIndex=0,currentExercise=0,walkMinutes=10,walkSeconds=600,walkTimer=null,walkRunning=false,currentMood="calm",currentStore="aldi";
 
-let lastScreen="home";
-let currentPlanKey="wed";
-let currentExerciseIndex=0;
-let restSeconds=90;
-let restInterval=null;
-let guidePlaying=true;
-let finishLock=false;
-
-function showScreen(id,navButton){
-  const current=document.querySelector('.screen.active');
-  if(current) lastScreen=current.id;
-  document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('active',s.id===id));
-  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.toggle('active',b.dataset.target===id));
-  if(navButton) navButton.classList.add('active');
-  window.scrollTo({top:0,behavior:'smooth'});
+function showScreen(id,navBtn){
+ const current=document.querySelector(".screen.active");if(current)lastMain=current.id;
+ document.querySelectorAll(".screen").forEach(s=>s.classList.toggle("active",s.id===id));
+ document.querySelectorAll(".nav").forEach(n=>n.classList.toggle("active",n.dataset.target===id));
+ if(navBtn)navBtn.classList.add("active");
+ window.scrollTo({top:0,behavior:"smooth"});
+}
+function renderPlan(){
+ document.getElementById("planDays").innerHTML=planMeta.map(x=>`<div class="plan-day ${x[5]}"><button onclick="openPreview('${x[4]}')"><div class="plan-date">${x[0]}<b>${x[1]}</b></div><div class="plan-copy"><h3>${x[2]}</h3><p>${x[3]}</p></div><span class="${x[5]==='current'?'pill red':'muted'}">${x[5]==='done'?'✓':x[5]==='current'?'START':'›'}</span></button></div>`).join("");
 }
 function openPreview(key){
-  currentPlanKey=key;
-  const p=plans[key];
-  document.getElementById('previewDay').textContent=p.day;
-  document.getElementById('previewTitle').textContent=p.title;
-  document.getElementById('previewSubtitle').textContent=p.subtitle;
-  document.getElementById('previewMinutes').textContent=p.minutes;
-  document.getElementById('previewMoves').textContent=p.movements.length;
-  document.getElementById('previewMovements').innerHTML=p.movements.map((m,i)=>`
-    <div class="movement-card">
-      <div class="movement-top">
-        <div class="move-num">${i+1}</div>
-        <div class="copy"><h3>${m[0]}</h3><p>${m[1]}</p></div>
-        <button class="guide-btn" onclick="openGuide(${m[2]})">▶ Guide</button>
-      </div>
-      <div class="movement-notes"><span>${m[3]}</span></div>
-    </div>`).join('');
-  const current=document.querySelector('.screen.active');
-  if(current) lastScreen=current.id;
-  showScreen('preview');
+ currentPlan=key;const p=plans[key];
+ document.getElementById("previewDay").textContent=p.day;document.getElementById("previewTitle").textContent=p.title;document.getElementById("previewSubtitle").textContent=p.subtitle;document.getElementById("previewMinutes").textContent=p.minutes;document.getElementById("previewCount").textContent=p.movements.length;
+ const c=document.getElementById("previewCarousel");
+ c.innerHTML=p.movements.map((m,i)=>{const g=guides[m[2]]||guides[0];return `<article class="exercise-slide"><div class="slide-top"><div><span class="pill red">${i+1} OF ${p.movements.length}</span><h2 style="margin-top:10px">${m[0]}</h2><div class="slide-dose">${m[1]}</div></div><span class="pill">RPE 6</span></div><div class="motion-box playing">${motionSVG(g.type)}</div><div class="slide-details"><div class="detail-block"><h3>Setup</h3><p>${g.setup}</p></div><div class="detail-block"><h3>Execution</h3><p>${g.execution}</p></div><div class="detail-block"><h3>Common mistakes</h3><ul>${g.mistakes.map(v=>`<li>${v}</li>`).join("")}</ul></div><div class="detail-block"><h3>Safety stop</h3><p>${g.safety}</p></div></div></article>`}).join("");
+ previewIndex=0;renderDots(p.movements.length);c.scrollLeft=0;c.onscroll=()=>{clearTimeout(c._t);c._t=setTimeout(()=>{const slide=c.querySelector(".exercise-slide");if(!slide)return;previewIndex=Math.round(c.scrollLeft/(slide.offsetWidth+13));renderDots(p.movements.length)},70)};
+ showScreen("preview");
 }
-function startWorkout(){
-  if(currentPlanKey!=='wed'){
-    toast('Prototype session loaded with Wednesday’s interactive workout.');
-  }
-  currentExerciseIndex=0;
-  updateWorkout();
-  showScreen('workout');
-}
-function updateWorkout(){
-  const p=plans.wed;
-  const m=p.movements[currentExerciseIndex];
-  document.getElementById('activeName').textContent=m[0];
-  document.getElementById('activeDose').textContent=m[1];
-  document.getElementById('exerciseCount').textContent=`Movement ${currentExerciseIndex+1} of ${p.movements.length}`;
-  document.getElementById('progressLabel').textContent=`${currentExerciseIndex+1} OF ${p.movements.length}`;
-  document.getElementById('progressBar').style.width=`${((currentExerciseIndex+1)/p.movements.length)*100}%`;
-  const setCount=currentExerciseIndex===0?3:2;
-  document.getElementById('setRows').innerHTML=Array.from({length:setCount},(_,i)=>`
-    <div class="set-grid set-row">
-      <div class="set-label">${i+1}</div>
-      <input class="field" inputmode="decimal" value="${currentExerciseIndex===0?(i===0?'180':''):''}" placeholder="lb">
-      <input class="field" inputmode="numeric" value="${currentExerciseIndex===0&&i===0?'8':''}" placeholder="reps">
-      <button class="set-check" onclick="toggleSet(this)">✓</button>
-    </div>`).join('');
-  restSeconds=currentExerciseIndex===3||currentExerciseIndex===4?60:90;
-  renderRest();
-}
-function toggleSet(btn){btn.classList.toggle('done')}
-function renderRest(){
-  const m=Math.floor(restSeconds/60).toString().padStart(2,'0');
-  const s=(restSeconds%60).toString().padStart(2,'0');
-  document.getElementById('restTime').textContent=`${m}:${s}`;
-}
-function adjustRest(delta){restSeconds=Math.max(0,restSeconds+delta);renderRest()}
-function toggleRest(){
-  const btn=document.getElementById('restToggle');
-  if(restInterval){clearInterval(restInterval);restInterval=null;btn.textContent='Resume';return}
-  btn.textContent='Pause';
-  restInterval=setInterval(()=>{
-    restSeconds=Math.max(0,restSeconds-1);renderRest();
-    if(restSeconds===0){clearInterval(restInterval);restInterval=null;btn.textContent='Restart';toast('Rest complete. Set up calmly for the next set.')}
-  },1000);
-}
-function selectPain(btn,val){
-  document.querySelectorAll('.pain-scale button').forEach(b=>b.classList.remove('selected'));
-  btn.classList.add('selected');btn.dataset.value=val;
-}
-function finishMovement(){
-  if(finishLock) return;
-  finishLock=true;
-  const btn=document.getElementById('finishMovementBtn');
-  btn.classList.add('locked');btn.textContent='Saving…';
-  setTimeout(()=>{
-    const total=plans.wed.movements.length;
-    if(currentExerciseIndex<total-1){
-      currentExerciseIndex++;
-      updateWorkout();
-      btn.textContent='Complete movement';btn.classList.remove('locked');
-      finishLock=false;window.scrollTo({top:0,behavior:'smooth'});
-      toast('Movement saved. Next exercise is ready.');
-    }else{
-      btn.textContent='Session complete ✓';
-      toast('Mission complete: controlled work, fully recorded.');
-      setTimeout(()=>{finishLock=false;btn.classList.remove('locked');btn.textContent='Complete movement';showScreen('progress')},1200);
-    }
-  },650);
-}
-function confirmExitWorkout(){
-  if(confirm('Leave this session? Your prototype entries will not be saved after refresh.')) showScreen('home');
-}
-function openGuide(index){
-  const g=guides[index]||guides[0];
-  document.getElementById('guideTitle').textContent=g.title;
-  document.getElementById('guideSetup').textContent=g.setup;
-  document.getElementById('guideExecution').textContent=g.execution;
-  document.getElementById('guideMistakes').innerHTML=g.mistakes.map(x=>`<li>${x}</li>`).join('');
-  document.getElementById('guideSafety').textContent=g.safety;
-  document.getElementById('motionStage').innerHTML=motionSVG(g.type);
-  document.getElementById('motionStage').classList.add('playing');
-  guidePlaying=true;document.getElementById('playGuideBtn').textContent='Pause motion';
-  document.getElementById('guideModal').classList.add('open');
-  document.body.style.overflow='hidden';
-}
+function renderDots(n){document.getElementById("previewDots").innerHTML=Array.from({length:n},(_,i)=>`<span class="dot ${i===previewIndex?'active':''}"></span>`).join("")}
+function movePreview(dir){const c=document.getElementById("previewCarousel"),slides=c.querySelectorAll(".exercise-slide");if(!slides.length)return;previewIndex=Math.max(0,Math.min(slides.length-1,previewIndex+dir));slides[previewIndex].scrollIntoView({behavior:"smooth",block:"nearest",inline:"center"});renderDots(slides.length)}
 function motionSVG(type){
-  const commonStart=`<svg class="motion-svg" viewBox="0 0 320 200"><path class="path pulse" d="M45 165 H275"/>`;
-  const end=`</svg>`;
-  const svgs=[
-    `${commonStart}<path class="equipment" d="M235 45 V162 M248 45 V162 M235 70 H275"/><g class="anim-a" style="transform-origin:180px 105px"><circle class="joint" cx="130" cy="62" r="13"/><path class="body" d="M137 75 L160 106 L192 119 M160 106 L143 143 M192 119 L232 95 M143 143 L103 151"/><path class="accent" d="M192 119 L232 95"/></g>${end}`,
-    `${commonStart}<path class="equipment" d="M95 155 H225"/><g class="anim-b" style="transform-origin:155px 145px"><circle class="joint" cx="145" cy="48" r="13"/><path class="body" d="M149 62 L166 105 L150 151 M166 105 L196 150 M158 82 L114 132 M158 82 L205 132"/><path class="accent" d="M114 132 H205"/></g>${end}`,
-    `${commonStart}<g class="anim-b" style="transform-origin:150px 150px"><circle class="joint" cx="145" cy="45" r="13"/><path class="body" d="M149 59 L155 105 M155 105 L112 150 M155 105 L207 153 M153 77 L120 102 M153 77 L190 100"/><path class="accent" d="M112 150 L155 105"/></g>${end}`,
-    `${commonStart}<path class="equipment" d="M60 135 H245 M80 135 V160 M225 135 V160"/><g class="anim-a"><circle class="joint" cx="110" cy="78" r="13"/><path class="body" d="M120 88 L150 118 L195 119 M150 118 L108 139 M195 119 L235 93"/><path class="accent" d="M195 119 L235 93"/></g>${end}`,
-    `${commonStart}<path class="equipment" d="M100 160 H220"/><g class="anim-c"><circle class="joint" cx="160" cy="47" r="13"/><path class="body" d="M160 62 V108 M160 108 L135 154 M160 108 L188 154 M160 78 L125 105 M160 78 L198 105"/><path class="accent" d="M135 154 L188 154"/></g>${end}`,
-    `${commonStart}<g transform="translate(0,8)" class="anim-a"><circle class="joint" cx="158" cy="78" r="13"/><path class="body" d="M145 88 L120 111 L158 126 L196 110 M158 126 L120 150 M158 126 L206 153 M120 111 L88 76 M196 110 L226 78"/><path class="accent" d="M120 111 L88 76 M158 126 L206 153"/></g>${end}`,
-    `${commonStart}<g class="anim-a" style="transform-origin:155px 135px"><circle class="joint" cx="155" cy="52" r="13"/><path class="body" d="M155 66 L150 108 M150 108 L117 154 M150 108 L194 152 M151 79 L119 91 M151 79 L188 92"/><path class="accent" d="M119 91 L94 70 M188 92 L215 75"/></g><path class="path pulse" d="M88 170 Q160 135 232 170"/>${end}`,
-    `${commonStart}<g class="anim-a"><circle class="joint" cx="155" cy="49" r="13"/><path class="body" d="M155 63 L154 106 M154 106 L126 154 M154 106 L186 154 M154 78 L126 106 M154 78 L185 105"/></g><path class="accent pulse" d="M205 65 Q238 85 205 105"/><path class="accent pulse" d="M104 65 Q71 85 104 105"/>${end}`
-  ];
-  return svgs[type]||svgs[0];
+ const start=`<svg class="motion-svg" viewBox="0 0 320 200"><path class="path pulse" d="M45 165 H275"/>`,end=`</svg>`;
+ const s=[
+ `${start}<path class="equipment" d="M235 45 V162 M248 45 V162 M235 70 H275"/><g class="anim-a" style="transform-origin:180px 105px"><circle class="joint" cx="130" cy="62" r="13"/><path class="body" d="M137 75 L160 106 L192 119 M160 106 L143 143 M192 119 L232 95 M143 143 L103 151"/><path class="accent" d="M192 119 L232 95"/></g>${end}`,
+ `${start}<path class="equipment" d="M95 155 H225"/><g class="anim-b" style="transform-origin:155px 145px"><circle class="joint" cx="145" cy="48" r="13"/><path class="body" d="M149 62 L166 105 L150 151 M166 105 L196 150 M158 82 L114 132 M158 82 L205 132"/><path class="accent" d="M114 132 H205"/></g>${end}`,
+ `${start}<g class="anim-b" style="transform-origin:150px 150px"><circle class="joint" cx="145" cy="45" r="13"/><path class="body" d="M149 59 L155 105 M155 105 L112 150 M155 105 L207 153 M153 77 L120 102 M153 77 L190 100"/><path class="accent" d="M112 150 L155 105"/></g>${end}`,
+ `${start}<path class="equipment" d="M60 135 H245 M80 135 V160 M225 135 V160"/><g class="anim-a"><circle class="joint" cx="110" cy="78" r="13"/><path class="body" d="M120 88 L150 118 L195 119 M150 118 L108 139 M195 119 L235 93"/><path class="accent" d="M195 119 L235 93"/></g>${end}`,
+ `${start}<path class="equipment" d="M100 160 H220"/><g class="anim-c"><circle class="joint" cx="160" cy="47" r="13"/><path class="body" d="M160 62 V108 M160 108 L135 154 M160 108 L188 154 M160 78 L125 105 M160 78 L198 105"/><path class="accent" d="M135 154 L188 154"/></g>${end}`,
+ `${start}<g transform="translate(0,8)" class="anim-a"><circle class="joint" cx="158" cy="78" r="13"/><path class="body" d="M145 88 L120 111 L158 126 L196 110 M158 126 L120 150 M158 126 L206 153 M120 111 L88 76 M196 110 L226 78"/><path class="accent" d="M120 111 L88 76 M158 126 L206 153"/></g>${end}`,
+ `${start}<g class="anim-a" style="transform-origin:155px 135px"><circle class="joint" cx="155" cy="52" r="13"/><path class="body" d="M155 66 L150 108 M150 108 L117 154 M150 108 L194 152 M151 79 L119 91 M151 79 L188 92"/><path class="accent" d="M119 91 L94 70 M188 92 L215 75"/></g><path class="path pulse" d="M88 170 Q160 135 232 170"/>${end}`,
+ `${start}<g class="anim-a"><circle class="joint" cx="155" cy="49" r="13"/><path class="body" d="M155 63 L154 106 M154 106 L126 154 M154 106 L186 154 M154 78 L126 106 M154 78 L185 105"/></g><path class="accent pulse" d="M205 65 Q238 85 205 105"/><path class="accent pulse" d="M104 65 Q71 85 104 105"/>${end}`];
+ return s[type]||s[0];
 }
-function toggleGuide(){
-  guidePlaying=!guidePlaying;
-  document.getElementById('motionStage').classList.toggle('playing',guidePlaying);
-  document.getElementById('playGuideBtn').textContent=guidePlaying?'Pause motion':'Play motion';
+function renderMusic(){
+ document.getElementById("musicList").innerHTML=moodMusic[currentMood].map((s,i)=>`<div class="music-card"><div class="cover">${i===0?'♪':i===1?'♫':'♬'}</div><div class="music-copy"><h3>${s[0]}</h3><p>${s[1]} · ${s[2]}</p></div><button class="play" onclick="toast('Music-service preview: ${s[0]}')">▶</button></div>`).join("");
+ const copy={upbeat:["High-energy walk","Use the music to build momentum without sprinting."],tired:["Easy-start walk","The first goal is simply to begin. Let the pace rise naturally."],calm:["10-minute reset walk","A calm pace with music that helps you settle down and finish with a win."],reflective:["Clear-your-head walk","Give your thoughts space without forcing an answer."],focused:["Locked-in walk","A steady rhythm for planning, discipline, and deliberate movement."]}[currentMood];
+ document.getElementById("walkTitle").textContent=copy[0];document.getElementById("walkMessage").textContent=copy[1];
 }
-function restartGuide(){
-  const stage=document.getElementById('motionStage');
-  const html=stage.innerHTML;stage.innerHTML='';requestAnimationFrame(()=>{stage.innerHTML=html;stage.classList.add('playing')});
-  guidePlaying=true;document.getElementById('playGuideBtn').textContent='Pause motion';
-}
-function closeModal(id){document.getElementById(id).classList.remove('open');document.body.style.overflow=''}
-function modalBackdrop(e,id){if(e.target.id===id) closeModal(id)}
-function openHistory(i){
-  const h=history[i];
-  document.getElementById('historyTitle').textContent=h.title;
-  document.getElementById('historyMeta').textContent=h.meta;
-  document.getElementById('historyDetails').innerHTML=h.rows.map(r=>`
-    <div class="detail-row"><span><strong>${r[0]}</strong><br><span class="muted">${r[2]}</span></span><span>${r[1]}<br><span style="color:var(--green);font-size:11px">${r[3]}</span></span></div>`).join('');
-  document.getElementById('historyPositive').textContent=h.positive;
-  document.getElementById('historyModal').classList.add('open');document.body.style.overflow='hidden';
-}
-const chartData={
-  "4w":[37,48,44,61,67,74,84],
-  "6m":[22,31,28,39,47,52,49,62,68,73,78,84],
-  "1y":[18,22,29,27,35,39,45,48,53,57,64,69,72,77,84],
-  "all":[12,16,20,28,24,31,39,44,50,47,56,61,69,66,74,79,84]
-};
-function setRange(btn){
-  document.querySelectorAll('#chartTabs button').forEach(b=>b.classList.remove('active'));btn.classList.add('active');
-  const r=btn.dataset.range;
-  const labels={"4w":["18,420 lb","↑ 14% vs previous 4 weeks"],"6m":["96,840 lb","↑ 28% vs previous 6 months"],"1y":["184,260 lb","↑ 46% vs previous year"],"all":["268,110 lb","Strongest consistency to date"]};
-  document.getElementById('chartValue').textContent=labels[r][0];document.getElementById('chartDelta').textContent=labels[r][1];
-  drawChart(chartData[r]);
-}
-function drawChart(data){
-  const w=420,h=170,pad=12;const max=Math.max(...data),min=Math.min(...data)-5;
-  const pts=data.map((v,i)=>[pad+i*(w-pad*2)/(data.length-1),h-pad-(v-min)/(max-min)*(h-pad*2)]);
-  const d=pts.map((p,i)=>(i?'L':'M')+p[0].toFixed(1)+' '+p[1].toFixed(1)).join(' ');
-  document.getElementById('chartLine').setAttribute('d',d);
-  document.getElementById('chartArea').setAttribute('d',d+` L ${pts[pts.length-1][0]} 180 L ${pts[0][0]} 180 Z`);
-  document.getElementById('chartDots').innerHTML=pts.map((p,i)=>`<circle class="chart-dot" cx="${p[0]}" cy="${p[1]}" r="${i===pts.length-1?6:3.5}"/>`).join('');
-}
-function openMeasure(){document.getElementById('measureModal').classList.add('open');document.body.style.overflow='hidden'}
-function saveMeasure(){
-  const btn=document.getElementById('saveMeasureBtn');
-  if(btn.classList.contains('locked'))return;
-  btn.classList.add('locked');btn.textContent='Saving…';
-  setTimeout(()=>{
-    btn.classList.remove('locked');btn.textContent='Save check-in';closeModal('measureModal');
-    toast('Check-in saved. One data point does not define your progress.');
-    document.querySelector('.positive-card h3').textContent='You kept the process moving';
-    document.querySelector('.positive-card p').textContent='The check-in is recorded. CampOS will compare trends over time instead of judging one day in isolation.';
-  },650);
-}
-let toastTimer;
-function toast(msg){
-  const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');
-  clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove('show'),3200);
-}
-drawChart(chartData["4w"]);
+function selectMood(btn){document.querySelectorAll("#moodChoices .choice").forEach(b=>b.classList.remove("active"));btn.classList.add("active");currentMood=btn.dataset.mood;renderMusic()}
+function selectDuration(btn){btn.parentElement.querySelectorAll(".choice").forEach(b=>b.classList.remove("active"));btn.classList.add("active");walkMinutes=Number(btn.dataset.min);walkSeconds=walkMinutes*60;document.getElementById("walkDurationLabel").textContent=`${walkMinutes} minutes`;document.getElementById("walkMeter").style.width=`${Math.min(100,20+walkMinutes*2.8)}%`;renderWalkTime()}
+function renderWalkTime(){const m=Math.floor(walkSeconds/60).toString().padStart(2,"0"),s=(walkSeconds%60).toString().padStart(2,"0");document.getElementById("walkTime").textContent=`${m}:${s}`}
+function startWalk(){document.getElementById("walkLive").classList.add("show");walkSeconds=walkMinutes*60;walkRunning=true;renderWalkTime();clearInterval(walkTimer);walkTimer=setInterval(()=>{if(!walkRunning)return;walkSeconds=Math.max(0,walkSeconds-1);renderWalkTime();if(walkSeconds===0){clearInterval(walkTimer);toast("Walk complete. You finished the reset.")}},1000);document.getElementById("walkLive").scrollIntoView({behavior:"smooth"})}
+function toggleWalk(){walkRunning=!walkRunning}
+function renderMeals(){document.getElementById("mealList").innerHTML=meals.map(m=>`<div class="meal-card"><div class="meal-time">${m[0]}</div><div class="meal-copy"><h3>${m[1]}</h3><p>${m[2]}</p></div><div class="meal-kcal">${m[3]}</div></div>`).join("")}
+function regenerateMeals(){meals[0][1]=meals[0][1]==="Protein oatmeal + eggs"?"Protein pancakes + eggs":"Protein oatmeal + eggs";meals[0][2]=meals[0][1].startsWith("Protein pancakes")?"Protein pancake mix, eggs, strawberries":"Oats, whey, strawberries, 3 eggs";renderMeals();toast("Meal plan regenerated around the same calorie and protein goals.")}
+function selectStore(btn){document.querySelectorAll(".store").forEach(b=>b.classList.remove("active"));btn.classList.add("active");currentStore=btn.dataset.store;renderGroceries();document.querySelector(".btn.ghost").textContent=currentStore==="aldi"?"Show all nearby Aldi options":`Show nearby ${stores[currentStore].name} options`;document.getElementById("locationList").classList.remove("show")}
+function toggleLocations(){document.getElementById("locationList").classList.toggle("show")}
+function renderGroceries(){const s=stores[currentStore];document.getElementById("groceryTitle").textContent=`${s.name} grocery list`;document.getElementById("groceryCost").textContent=s.cost;document.getElementById("groceryList").innerHTML=s.items.map(x=>`<div class="grocery-card"><button class="grocery-check" onclick="this.classList.toggle('done')">✓</button><div class="grocery-copy"><h3>${x[0]}</h3><p>${x[1]} · matched to 2,100 kcal / 190 g protein</p></div></div>`).join("")}
+function renderHistory(){document.getElementById("historyList").innerHTML=workouts.map((w,i)=>`<div class="history-card"><button onclick="loadWorkout(${i})"><div class="datebox">${w.date[0]}<b>${w.date[1]}</b></div><div class="history-copy"><h3>${w.title}</h3><p>${w.meta}</p></div><div class="delta">${w.delta}<br><span class="muted">view</span></div></button></div>`).join("")}
+function loadWorkout(i){toast(`${workouts[i].title} loaded for comparison.`);document.getElementById("exerciseSelect").value=i===0?"Incline Chest Press":i===1?"Leg Press":"Landmine Press";renderComparison();document.querySelector(".compare-card").scrollIntoView({behavior:"smooth"})}
+function renderComparison(){const n=document.getElementById("exerciseSelect").value,d=comparisons[n],max=Math.max(...d.prev,...d.now);document.getElementById("compareBars").innerHTML=d.sets.map((s,i)=>`<div class="bar-group"><div class="bar prev" style="height:${d.prev[i]/max*125}px"></div><div class="bar" style="height:${d.now[i]/max*125}px"></div><div class="bar-label">${s}</div></div>`).join("");document.getElementById("compareTable").innerHTML=`<div class="compare-row head"><div>Set</div><div>Previous</div><div>Selected</div></div>`+d.sets.map((s,i)=>`<div class="compare-row"><b>${i+1}</b><span>${d.prev[i]} lb</span><span>${d.now[i]} lb <b style="color:var(--green)">(+${d.now[i]-d.prev[i]})</b></span></div>`).join("")}
+function startWorkout(){currentExercise=0;renderActiveWorkout();showScreen("workout")}
+function renderActiveWorkout(){const m=plans.wed.movements[currentExercise];document.getElementById("exerciseCounter").textContent=`MOVEMENT ${currentExercise+1} OF ${plans.wed.movements.length}`;document.getElementById("activeExercise").textContent=m[0];document.getElementById("activeDose").textContent=m[1];const sets=currentExercise===0||currentExercise===4?3:2;document.getElementById("setRows").innerHTML=Array.from({length:sets},(_,i)=>`<div class="set-grid set-row"><b>${i+1}</b><input class="field" inputmode="decimal" placeholder="lb"><input class="field" inputmode="numeric" placeholder="reps"><button class="set-check" onclick="this.classList.toggle('done')">✓</button></div>`).join("")}
+function completeExercise(){if(currentExercise<plans.wed.movements.length-1){currentExercise++;renderActiveWorkout();window.scrollTo({top:0,behavior:"smooth"});toast("Movement saved. Next exercise is ready.")}else{toast("Session complete. Your sets were added to workout history.");setTimeout(()=>showScreen("history"),900)}}
+let toastTimer;function toast(msg){const t=document.getElementById("toast");t.textContent=msg;t.classList.add("show");clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove("show"),3000)}
+renderPlan();renderMusic();renderMeals();renderGroceries();renderHistory();renderComparison();
 </script>
 </body>
 </html>
