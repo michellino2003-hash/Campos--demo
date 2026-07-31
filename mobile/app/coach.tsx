@@ -5,31 +5,38 @@ import { calculateReadiness, type ReadinessSignals, type SessionPrescription } f
 import { getReadiness } from '../lib/readiness-storage';
 import { buildWeightStats, getWeightHistory } from '../lib/progress-storage';
 import { buildWorkoutStats, getActiveWorkoutSession, getWorkoutHistory } from '../lib/training-storage';
+import { buildNutritionStats, getNutritionDay, getNutritionGoals } from '../lib/nutrition-storage';
 
 const DEFAULT_SIGNALS: ReadinessSignals = { sleep: 75, energy: 7, soreness: 3, stress: 4, jointComfort: 8, pain: 0 };
 
 type TrainingStats = ReturnType<typeof buildWorkoutStats>;
 type WeightStats = ReturnType<typeof buildWeightStats>;
+type NutritionStats = ReturnType<typeof buildNutritionStats>;
 
 const EMPTY_TRAINING: TrainingStats = { totalMissions: 0, totalMinutes: 0, averageEffort: 0, activeDays: 0, currentStreak: 0, thisWeekMissions: 0, thisWeekActiveDays: 0, thisWeekMinutes: 0 };
 const EMPTY_WEIGHT: WeightStats = { current: 0, starting: 0, change: 0, trend: 'No data' };
+const EMPTY_NUTRITION: NutritionStats = { calories: 0, protein: 0, carbs: 0, fat: 0, caloriesRemaining: 0, proteinRemaining: 0, calorieProgress: 0, proteinProgress: 0, overCalories: false, calorieDelta: 0 };
 
 export default function CoachScreen() {
   const [prescription, setPrescription] = useState<SessionPrescription>(() => calculateReadiness(DEFAULT_SIGNALS));
   const [training, setTraining] = useState<TrainingStats>(EMPTY_TRAINING);
   const [weight, setWeight] = useState<WeightStats>(EMPTY_WEIGHT);
+  const [nutrition, setNutrition] = useState<NutritionStats>(EMPTY_NUTRITION);
   const [hasActiveSession, setHasActiveSession] = useState(false);
 
   const refresh = useCallback(async () => {
-    const [readiness, history, weights, active] = await Promise.all([
+    const [readiness, history, weights, active, nutritionDay, nutritionGoals] = await Promise.all([
       getReadiness(),
       getWorkoutHistory(),
       getWeightHistory(),
       getActiveWorkoutSession(),
+      getNutritionDay(),
+      getNutritionGoals(),
     ]);
     setPrescription(readiness?.prescription ?? calculateReadiness(DEFAULT_SIGNALS));
     setTraining(buildWorkoutStats(history));
     setWeight(buildWeightStats(weights));
+    setNutrition(buildNutritionStats(nutritionDay.entries, nutritionGoals));
     setHasActiveSession(Boolean(active));
   }, []);
 
@@ -44,6 +51,31 @@ export default function CoachScreen() {
     if (prescription.mode === 'push') return { title: 'Use the extra capacity—without chasing failure.', detail: 'Recovery supports a performance day. Press pace only while movement stays sharp.', action: 'START PERFORMANCE DAY', route: '/workout' as const };
     return { title: 'Execute the planned work cleanly.', detail: 'Readiness is stable. The highest-value move is a controlled session followed by normal recovery.', action: 'START GUIDED MISSION', route: '/workout' as const };
   }, [hasActiveSession, prescription, training]);
+
+  const fuelDecision = useMemo(() => {
+    if (nutrition.overCalories) {
+      return {
+        title: 'No compensation required.',
+        detail: `Today is ${nutrition.calorieDelta} calories above the current target. Do not add punishment cardio or skip meals. Choose one small reset action and continue normally.`,
+      };
+    }
+    if (nutrition.proteinRemaining > 30) {
+      return {
+        title: 'Protein is the clearest fuel gap.',
+        detail: `${nutrition.proteinRemaining}g remains against today’s protein target. Use the Fuel screen to finish the day with a normal protein-forward meal or snack.`,
+      };
+    }
+    if (nutrition.calories === 0) {
+      return {
+        title: 'Fuel data is still empty today.',
+        detail: 'Log a meal when convenient. CampOS can give better context once it knows what has actually been eaten.',
+      };
+    }
+    return {
+      title: 'Fueling is in a workable range.',
+      detail: 'Keep eating normally, hydrate, and avoid trying to make the day perfect. Consistency matters more than a single number.',
+    };
+  }, [nutrition]);
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -74,16 +106,25 @@ export default function CoachScreen() {
           <Metric value={`${training.thisWeekMissions}`} label="WEEK MISSIONS" />
           <Metric value={training.averageEffort ? `${training.averageEffort}` : '—'} label="AVG RPE" />
           <Metric value={weight.current ? `${weight.current.toFixed(1)}` : '—'} label="BODYWEIGHT" />
+          <Metric value={`${nutrition.calories}`} label="CALORIES" />
+          <Metric value={`${nutrition.protein}g`} label="PROTEIN" />
         </View>
+
+        <TouchableOpacity activeOpacity={0.85} style={styles.fuelCard} onPress={() => router.push('/nutrition')}>
+          <View style={styles.fuelHeader}><Text style={styles.guardrailLabel}>FUEL READ</Text><Text style={styles.fuelLink}>OPEN FUEL →</Text></View>
+          <Text style={styles.guardrailTitle}>{fuelDecision.title}</Text>
+          <Text style={styles.guardrailCopy}>{fuelDecision.detail}</Text>
+        </TouchableOpacity>
 
         <View style={styles.guardrail}>
           <Text style={styles.guardrailLabel}>COACH GUARDRAIL</Text>
           <Text style={styles.guardrailTitle}>{prescription.stopForPain ? 'Pain overrides ambition.' : 'Progress without blind pushing.'}</Text>
-          <Text style={styles.guardrailCopy}>{prescription.stopForPain ? 'CampOS will not recommend loaded training when the pain signal crosses the safety threshold.' : 'During the workout, effort, breathing, pain, and technique can now automatically reduce the remaining prescription.'}</Text>
+          <Text style={styles.guardrailCopy}>{prescription.stopForPain ? 'CampOS will not recommend loaded training when the pain signal crosses the safety threshold.' : 'During the workout, effort, breathing, pain, and technique can automatically reduce the remaining prescription.'}</Text>
         </View>
 
         <View style={styles.actions}>
           <TouchableOpacity style={styles.secondary} onPress={() => router.push('/')}><Text style={styles.secondaryText}>UPDATE READINESS</Text></TouchableOpacity>
+          <TouchableOpacity style={styles.secondary} onPress={() => router.push('/nutrition')}><Text style={styles.secondaryText}>VIEW FUEL</Text></TouchableOpacity>
           <TouchableOpacity style={styles.secondary} onPress={() => router.push('/progress')}><Text style={styles.secondaryText}>VIEW PROGRESS</Text></TouchableOpacity>
         </View>
       </ScrollView>
@@ -122,6 +163,8 @@ const styles = StyleSheet.create({
   metric: { width: '48%', backgroundColor: '#0E1217', borderWidth: 1, borderColor: '#242A32', borderRadius: 18, padding: 16 },
   metricValue: { color: '#F5F2EA', fontSize: 25, fontWeight: '900' },
   metricLabel: { color: '#717985', fontSize: 9, fontWeight: '900', marginTop: 5 },
+  fuelCard: { backgroundColor: '#101510', borderWidth: 1, borderColor: '#304130', borderRadius: 20, padding: 18, gap: 7, marginTop: 4 },
+  fuelHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }, fuelLink: { color: '#99B69A', fontSize: 9, fontWeight: '900', letterSpacing: 0.5 },
   guardrail: { backgroundColor: '#12100C', borderWidth: 1, borderColor: '#403421', borderRadius: 20, padding: 18, gap: 7, marginTop: 4 },
   guardrailLabel: { color: '#C89B3C', fontSize: 9, fontWeight: '900', letterSpacing: 1.2 },
   guardrailTitle: { color: '#EEEAE2', fontSize: 18, fontWeight: '900' },
