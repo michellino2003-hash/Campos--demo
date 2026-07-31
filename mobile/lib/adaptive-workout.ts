@@ -16,6 +16,22 @@ export type AdaptiveWorkoutBlock = {
   steps: GuidedStep[];
 };
 
+export type LiveSessionFeedback = {
+  effort: 1 | 2 | 3 | 4 | 5;
+  technique: 'sharp' | 'slipping' | 'breaking-down';
+  pain: 'none' | 'mild' | 'rising';
+  breathing: 'controlled' | 'working' | 'struggling';
+};
+
+export type LiveCoachAdjustment = {
+  mode: 'continue' | 'ease' | 'recover' | 'stop';
+  message: string;
+  targetRpeDelta: number;
+  extraRestSeconds: number;
+  durationMultiplier: number;
+  powerCeiling?: string;
+};
+
 const BASE: AdaptiveWorkoutBlock[] = [
   {
     title: 'Movement prep',
@@ -107,6 +123,93 @@ export function buildAdaptiveWorkout(prescription?: SessionPrescription | null):
     return BASE.map((block) => block.type === 'boxing' ? { ...block, cue: `${block.cue} Press the pace only while technique stays sharp.` } : block);
   }
   return BASE;
+}
+
+export function getLiveCoachAdjustment(feedback: LiveSessionFeedback): LiveCoachAdjustment {
+  if (feedback.pain === 'rising') {
+    return {
+      mode: 'stop',
+      message: 'Pain is rising. Loaded work is done for today; protect the next training day.',
+      targetRpeDelta: -3,
+      extraRestSeconds: 120,
+      durationMultiplier: 0.35,
+      powerCeiling: 'No power work',
+    };
+  }
+
+  if (feedback.technique === 'breaking-down' || feedback.breathing === 'struggling' || feedback.effort === 5) {
+    return {
+      mode: 'recover',
+      message: 'Quality is dropping. CampOS is cutting volume before fatigue turns into bad reps.',
+      targetRpeDelta: -2,
+      extraRestSeconds: 60,
+      durationMultiplier: 0.65,
+      powerCeiling: '50–60%',
+    };
+  }
+
+  if (feedback.pain === 'mild' || feedback.technique === 'slipping' || feedback.effort === 4) {
+    return {
+      mode: 'ease',
+      message: 'Stay productive, but sharpen the work: more recovery, less volume, clean technique only.',
+      targetRpeDelta: -1,
+      extraRestSeconds: 30,
+      durationMultiplier: 0.82,
+      powerCeiling: '60–70%',
+    };
+  }
+
+  return {
+    mode: 'continue',
+    message: 'You are handling the session well. Keep the prescription and protect your technique.',
+    targetRpeDelta: 0,
+    extraRestSeconds: 0,
+    durationMultiplier: 1,
+  };
+}
+
+export function adaptRemainingWorkout(
+  blocks: AdaptiveWorkoutBlock[],
+  completedThroughIndex: number,
+  feedback: LiveSessionFeedback,
+): { blocks: AdaptiveWorkoutBlock[]; adjustment: LiveCoachAdjustment } {
+  const adjustment = getLiveCoachAdjustment(feedback);
+  if (adjustment.mode === 'continue') return { blocks, adjustment };
+
+  const adapted = blocks
+    .map((block, index) => {
+      if (index <= completedThroughIndex) return block;
+
+      if (adjustment.mode === 'stop') {
+        if (block.type !== 'recovery') return null;
+        return {
+          ...block,
+          duration: Math.max(300, Math.round(block.duration * 0.7)),
+          detail: 'Pain-free recovery only',
+          cue: adjustment.message,
+          steps: block.steps.filter((step) => step.label !== 'Suitcase hold'),
+        };
+      }
+
+      if (block.type !== 'boxing' && block.type !== 'strength') return block;
+      const keepSteps = adjustment.mode === 'recover'
+        ? Math.max(1, Math.ceil(block.steps.length * 0.6))
+        : block.steps.length;
+
+      return {
+        ...block,
+        duration: Math.max(120, Math.round(block.duration * adjustment.durationMultiplier)),
+        detail: `${block.detail} · live adjusted`,
+        cue: adjustment.message,
+        steps: block.steps.slice(0, keepSteps).map((step) => ({
+          ...step,
+          instruction: `${step.instruction} ${adjustment.powerCeiling ? `Cap power at ${adjustment.powerCeiling}. ` : ''}${adjustment.extraRestSeconds ? `Take up to ${adjustment.extraRestSeconds} extra seconds before repeating quality work.` : ''}`.trim(),
+        })),
+      };
+    })
+    .filter((block): block is AdaptiveWorkoutBlock => Boolean(block));
+
+  return { blocks: adapted, adjustment };
 }
 
 export function adaptiveSessionMinutes(blocks: AdaptiveWorkoutBlock[]) {
