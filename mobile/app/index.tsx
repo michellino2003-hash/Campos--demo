@@ -51,6 +51,7 @@ export default function CampOSHome() {
           <View><Text style={styles.eyebrow}>CAMPOS PERFORMANCE</Text><Text style={styles.title}>Tonight’s mission</Text></View>
           <View style={styles.navButtons}>
             <TouchableOpacity style={styles.navButton} onPress={() => router.push('/coach')}><Text style={styles.navButtonText}>COACH</Text></TouchableOpacity>
+            <TouchableOpacity style={styles.navButton} onPress={() => router.push('/nutrition')}><Text style={styles.navButtonText}>FUEL</Text></TouchableOpacity>
             <TouchableOpacity style={styles.navButton} onPress={() => router.push('/progress')}><Text style={styles.navButtonText}>PROGRESS</Text></TouchableOpacity>
           </View>
         </View>
@@ -91,7 +92,7 @@ export default function CampOSHome() {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: '#07090D' }, container: { padding: 22, paddingBottom: 48, gap: 12 },
-  topRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 12 }, navButtons: { gap: 7, alignItems: 'stretch' }, navButton: { borderWidth: 1, borderColor: '#4B4028', backgroundColor: '#15120C', borderRadius: 11, paddingHorizontal: 11, paddingVertical: 8 }, navButtonText: { color: '#D8B15C', fontSize: 9, fontWeight: '900', letterSpacing: 0.7, textAlign: 'center' },
+  topRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 12 }, navButtons: { gap: 6, alignItems: 'stretch' }, navButton: { borderWidth: 1, borderColor: '#4B4028', backgroundColor: '#15120C', borderRadius: 10, paddingHorizontal: 10, paddingVertical: 7 }, navButtonText: { color: '#D8B15C', fontSize: 8, fontWeight: '900', letterSpacing: 0.6, textAlign: 'center' },
   eyebrow: { color: '#C89B3C', fontSize: 11, fontWeight: '900', letterSpacing: 1.5 }, title: { color: '#F5F2EA', fontSize: 34, lineHeight: 38, fontWeight: '900', marginTop: 4 },
   hero: { backgroundColor: '#11151B', borderWidth: 1, borderColor: '#2B313A', borderRadius: 24, padding: 20, gap: 16 }, heroTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
   label: { color: '#858C98', fontSize: 11, fontWeight: '800', letterSpacing: 1 }, score: { color: '#F5F2EA', fontSize: 50, fontWeight: '900' }, badge: { backgroundColor: '#2A2112', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 999 }, badgeText: { color: '#E1B75E', fontWeight: '900', fontSize: 11, letterSpacing: 1 },
