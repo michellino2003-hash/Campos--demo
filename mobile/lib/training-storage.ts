@@ -1,4 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import type { LiveSessionFeedback } from './adaptive-workout';
 
 const HISTORY_KEY = '@campos/workout-history-v1';
 const ACTIVE_SESSION_KEY = '@campos/active-workout-session-v1';
@@ -14,6 +15,11 @@ export type WorkoutSession = {
   effort: number;
 };
 
+export type LiveSessionAdaptation = {
+  afterBlock: number;
+  feedback: LiveSessionFeedback;
+};
+
 export type ActiveWorkoutSession = {
   version: 1;
   startedAt: string;
@@ -25,6 +31,7 @@ export type ActiveWorkoutSession = {
   completedBlocks: number[];
   sessionSeconds: number;
   isRunning: boolean;
+  adaptations?: LiveSessionAdaptation[];
 };
 
 export async function getWorkoutHistory(): Promise<WorkoutSession[]> {
@@ -76,7 +83,20 @@ export async function getActiveWorkoutSession(): Promise<ActiveWorkoutSession | 
       typeof parsed.sessionSeconds !== 'number' ||
       typeof parsed.isRunning !== 'boolean'
     ) return null;
-    return parsed as ActiveWorkoutSession;
+
+    const adaptations = Array.isArray(parsed.adaptations)
+      ? parsed.adaptations.filter((item) =>
+          item &&
+          typeof item.afterBlock === 'number' &&
+          item.feedback &&
+          typeof item.feedback.effort === 'number' &&
+          typeof item.feedback.technique === 'string' &&
+          typeof item.feedback.pain === 'string' &&
+          typeof item.feedback.breathing === 'string',
+        )
+      : [];
+
+    return { ...(parsed as ActiveWorkoutSession), adaptations };
   } catch {
     return null;
   }
