@@ -47,8 +47,10 @@ export default function CampOSHome() {
   return (
     <SafeAreaView style={styles.safe}>
       <ScrollView contentContainerStyle={styles.container}>
-        <Text style={styles.eyebrow}>CAMPOS PERFORMANCE</Text>
-        <Text style={styles.title}>Tonight’s mission</Text>
+        <View style={styles.topRow}>
+          <View><Text style={styles.eyebrow}>CAMPOS PERFORMANCE</Text><Text style={styles.title}>Tonight’s mission</Text></View>
+          <TouchableOpacity style={styles.progressButton} onPress={() => router.push('/progress')}><Text style={styles.progressButtonText}>PROGRESS</Text></TouchableOpacity>
+        </View>
 
         <View style={styles.hero}>
           <View style={styles.heroTop}><View><Text style={styles.label}>READINESS</Text><Text style={styles.score}>{prescription.score}</Text></View><View style={styles.badge}><Text style={styles.badgeText}>{prescription.mode.toUpperCase()}</Text></View></View>
@@ -57,7 +59,7 @@ export default function CampOSHome() {
           <TouchableOpacity style={styles.primary} onPress={startWorkout}><Text style={styles.primaryText}>{hasActiveSession ? 'RESUME GUIDED MISSION →' : 'START GUIDED MISSION →'}</Text></TouchableOpacity>
         </View>
 
-        <Text style={styles.section}>Training command center</Text>
+        <View style={styles.sectionRow}><Text style={styles.section}>Training command center</Text><TouchableOpacity onPress={() => router.push('/progress')}><Text style={styles.sectionLink}>VIEW RECORD →</Text></TouchableOpacity></View>
         <View style={styles.grid}>
           <View style={styles.metric}><Text style={styles.metricValue}>{stats.currentStreak}</Text><Text style={styles.metricLabel}>DAY STREAK</Text></View>
           <View style={styles.metric}><Text style={styles.metricValue}>{stats.thisWeekMissions}</Text><Text style={styles.metricLabel}>THIS WEEK</Text></View>
@@ -83,11 +85,11 @@ export default function CampOSHome() {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: '#07090D' }, container: { padding: 22, paddingBottom: 48, gap: 12 },
-  eyebrow: { color: '#C89B3C', fontSize: 11, fontWeight: '900', letterSpacing: 1.5 }, title: { color: '#F5F2EA', fontSize: 34, lineHeight: 38, fontWeight: '900', marginBottom: 10 },
+  topRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 12 }, eyebrow: { color: '#C89B3C', fontSize: 11, fontWeight: '900', letterSpacing: 1.5 }, title: { color: '#F5F2EA', fontSize: 34, lineHeight: 38, fontWeight: '900', marginTop: 4 }, progressButton: { borderWidth: 1, borderColor: '#4B4028', backgroundColor: '#15120C', borderRadius: 12, paddingHorizontal: 12, paddingVertical: 10 }, progressButtonText: { color: '#D8B15C', fontSize: 10, fontWeight: '900', letterSpacing: 0.7 },
   hero: { backgroundColor: '#11151B', borderWidth: 1, borderColor: '#2B313A', borderRadius: 24, padding: 20, gap: 16 }, heroTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
   label: { color: '#858C98', fontSize: 11, fontWeight: '800', letterSpacing: 1 }, score: { color: '#F5F2EA', fontSize: 50, fontWeight: '900' }, badge: { backgroundColor: '#2A2112', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 999 }, badgeText: { color: '#E1B75E', fontWeight: '900', fontSize: 11, letterSpacing: 1 },
   heroMessage: { color: '#C9CDD4', fontSize: 15, lineHeight: 22 }, statRow: { flexDirection: 'row', justifyContent: 'space-between', gap: 12 }, stat: { color: '#F5F2EA', fontSize: 18, fontWeight: '900' }, statLabel: { color: '#717985', fontSize: 9, fontWeight: '800', marginTop: 3 },
-  section: { color: '#F5F2EA', fontSize: 20, fontWeight: '900', marginTop: 14 }, grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 }, metric: { width: '48%', backgroundColor: '#0E1217', borderWidth: 1, borderColor: '#232933', borderRadius: 18, padding: 16 }, metricValue: { color: '#F5F2EA', fontSize: 26, fontWeight: '900' }, metricLabel: { color: '#717985', fontSize: 9, fontWeight: '900', marginTop: 5 },
+  sectionRow: { flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', gap: 8, marginTop: 14 }, section: { color: '#F5F2EA', fontSize: 20, fontWeight: '900', marginTop: 14 }, sectionLink: { color: '#C89B3C', fontSize: 9, fontWeight: '900', letterSpacing: 0.5 }, grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 }, metric: { width: '48%', backgroundColor: '#0E1217', borderWidth: 1, borderColor: '#232933', borderRadius: 18, padding: 16 }, metricValue: { color: '#F5F2EA', fontSize: 26, fontWeight: '900' }, metricLabel: { color: '#717985', fontSize: 9, fontWeight: '900', marginTop: 5 },
   rowCard: { backgroundColor: '#0E1217', borderWidth: 1, borderColor: '#232933', borderRadius: 18, padding: 16, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }, value: { color: '#F5F2EA', fontSize: 24, fontWeight: '900', marginTop: 3 }, controls: { flexDirection: 'row', gap: 8 }, control: { width: 44, height: 44, borderRadius: 14, backgroundColor: '#191F27', alignItems: 'center', justifyContent: 'center' }, controlText: { color: '#F5F2EA', fontSize: 24, fontWeight: '800' },
   coachCard: { backgroundColor: '#12100C', borderWidth: 1, borderColor: '#3B3020', borderRadius: 20, padding: 18, gap: 8, marginTop: 8 }, reason: { color: '#D7D1C7', fontSize: 14, lineHeight: 20 },
   primary: { backgroundColor: '#C89B3C', borderRadius: 17, padding: 17, alignItems: 'center' }, primaryText: { color: '#090B0E', fontWeight: '900', letterSpacing: 1 }, secondary: { borderWidth: 1, borderColor: '#343B46', borderRadius: 17, padding: 16, alignItems: 'center' }, secondaryText: { color: '#D7DADF', fontWeight: '900', letterSpacing: 0.7 }, footer: { color: '#626A76', textAlign: 'center', marginTop: 8, fontSize: 11 },
