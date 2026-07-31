@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { calculateReadiness, type ReadinessSignals } from '@/lib/adaptive-coach';
-import { getReadiness, saveReadiness } from '@/lib/readiness-storage';
+import { calculateReadiness, type ReadinessSignals } from '../lib/adaptive-coach';
+import { getReadiness, saveReadiness } from '../lib/readiness-storage';
 
 const DEFAULT_SIGNALS: ReadinessSignals = {
   sleep: 75,
