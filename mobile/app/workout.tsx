@@ -21,6 +21,9 @@ export default function WorkoutScreen() {
   const [running, setRunning] = useState(false);
   const [startedAt, setStartedAt] = useState(new Date().toISOString());
   const [restored, setRestored] = useState(false);
+  const [finished, setFinished] = useState(false);
+  const [effort, setEffort] = useState(7);
+  const [saving, setSaving] = useState(false);
   const hydrated = useRef(false);
 
   useEffect(() => {
@@ -44,7 +47,7 @@ export default function WorkoutScreen() {
   }, []);
 
   useEffect(() => {
-    if (!running) return;
+    if (!running || finished) return;
     const timer = setInterval(() => {
       setSessionSeconds((value) => value + 1);
       setSecondsLeft((value) => {
@@ -56,10 +59,10 @@ export default function WorkoutScreen() {
       });
     }, 1000);
     return () => clearInterval(timer);
-  }, [running]);
+  }, [running, finished]);
 
   useEffect(() => {
-    if (!hydrated.current) return;
+    if (!hydrated.current || finished) return;
     saveActiveWorkoutSession({
       startedAt,
       title: 'Speed, precision & strength',
@@ -70,16 +73,32 @@ export default function WorkoutScreen() {
       sessionSeconds,
       isRunning: running,
     }).catch(() => {});
-  }, [activeBlock, completedBlocks, running, secondsLeft, sessionSeconds, startedAt]);
+  }, [activeBlock, completedBlocks, finished, running, secondsLeft, sessionSeconds, startedAt]);
 
   const progress = useMemo(() => Math.round((completedBlocks.length / blocks.length) * 100), [blocks.length, completedBlocks.length]);
   const block = blocks[activeBlock];
 
-  const completeBlock = async () => {
+  const completeBlock = () => {
     const nextCompleted = completedBlocks.includes(activeBlock) ? completedBlocks : [...completedBlocks, activeBlock];
     setCompletedBlocks(nextCompleted);
 
     if (activeBlock === blocks.length - 1) {
+      setRunning(false);
+      setCompletedBlocks(blocks.map((_, index) => index));
+      setFinished(true);
+      return;
+    }
+
+    const next = activeBlock + 1;
+    setActiveBlock(next);
+    setSecondsLeft(blocks[next].duration);
+    setRunning(true);
+  };
+
+  const saveMission = async () => {
+    if (saving) return;
+    setSaving(true);
+    try {
       await saveWorkoutSession({
         id: `${Date.now()}`,
         completedAt: new Date().toISOString(),
@@ -88,17 +107,13 @@ export default function WorkoutScreen() {
         durationSeconds: Math.max(sessionSeconds, 60),
         blocksCompleted: blocks.length,
         totalBlocks: blocks.length,
-        effort: 7,
+        effort,
       });
       await clearActiveWorkoutSession();
-      router.replace('/');
-      return;
+      router.replace('/progress');
+    } finally {
+      setSaving(false);
     }
-
-    const next = activeBlock + 1;
-    setActiveBlock(next);
-    setSecondsLeft(blocks[next].duration);
-    setRunning(true);
   };
 
   const exit = async () => {
@@ -115,6 +130,41 @@ export default function WorkoutScreen() {
     });
     router.back();
   };
+
+  if (finished) {
+    return (
+      <SafeAreaView style={styles.safe}>
+        <ScrollView contentContainerStyle={styles.completeContainer}>
+          <View style={styles.victory}><Text style={styles.victoryText}>✓</Text></View>
+          <Text style={styles.completeEyebrow}>MISSION COMPLETE</Text>
+          <Text style={styles.completeTitle}>Another promise kept.</Text>
+          <Text style={styles.completeCopy}>You completed the prescription. Rate the session so CampOS can build a more useful training history instead of guessing how the work felt.</Text>
+
+          <View style={styles.summaryCard}>
+            <View style={styles.summaryRow}><Text style={styles.summaryLabel}>SESSION TIME</Text><Text style={styles.summaryValue}>{formatTime(sessionSeconds)}</Text></View>
+            <View style={styles.divider} />
+            <View style={styles.summaryRow}><Text style={styles.summaryLabel}>BLOCKS</Text><Text style={styles.summaryValue}>{blocks.length}/{blocks.length}</Text></View>
+            <View style={styles.divider} />
+            <View style={styles.summaryRow}><Text style={styles.summaryLabel}>PRESCRIPTION</Text><Text style={styles.summaryValue}>{adaptiveSessionMinutes(blocks)} min</Text></View>
+          </View>
+
+          <Text style={styles.effortTitle}>How hard did that feel?</Text>
+          <View style={styles.effortRow}>
+            {[5, 6, 7, 8, 9].map((value) => (
+              <TouchableOpacity key={value} style={[styles.effortButton, effort === value && styles.effortButtonActive]} onPress={() => setEffort(value)}>
+                <Text style={[styles.effortValue, effort === value && styles.effortValueActive]}>{value}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+          <Text style={styles.effortCaption}>RPE {effort} · {effort <= 6 ? 'Comfortable' : effort <= 8 ? 'Productive' : 'Very hard'}</Text>
+
+          <View style={styles.coachCard}><Text style={styles.completeEyebrow}>COACH</Text><Text style={styles.coachTitle}>Recovery starts now.</Text><Text style={styles.coachCopy}>Hydrate, eat normally, and let the work settle in. The goal is to stack another good day—not punish yourself for this one.</Text></View>
+
+          <TouchableOpacity style={styles.primary} onPress={saveMission}><Text style={styles.primaryText}>{saving ? 'SAVING MISSION…' : 'SAVE MISSION & VIEW PROGRESS →'}</Text></TouchableOpacity>
+        </ScrollView>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -215,4 +265,15 @@ const styles = StyleSheet.create({
   primary: { backgroundColor: '#C89B3C', borderRadius: 17, padding: 17, alignItems: 'center', marginTop: 10 },
   primaryText: { color: '#090B0E', fontWeight: '900', letterSpacing: 0.8 },
   footer: { color: '#626A76', textAlign: 'center', fontSize: 11 },
+  completeContainer: { padding: 24, paddingTop: 50, paddingBottom: 60, alignItems: 'stretch', gap: 16 },
+  victory: { alignSelf: 'center', width: 74, height: 74, borderRadius: 37, borderWidth: 2, borderColor: '#C89B3C', backgroundColor: '#17140E', alignItems: 'center', justifyContent: 'center' },
+  victoryText: { color: '#E1B75E', fontSize: 34, fontWeight: '900' },
+  completeEyebrow: { color: '#C89B3C', fontSize: 10, fontWeight: '900', letterSpacing: 1.4 },
+  completeTitle: { color: '#F5F2EA', fontSize: 36, lineHeight: 39, fontWeight: '900' },
+  completeCopy: { color: '#989FA9', fontSize: 14, lineHeight: 21 },
+  summaryCard: { backgroundColor: '#0E1217', borderWidth: 1, borderColor: '#292F38', borderRadius: 20, padding: 17 },
+  summaryRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 5 },
+  summaryLabel: { color: '#737B87', fontSize: 10, fontWeight: '900' }, summaryValue: { color: '#F0EEE9', fontWeight: '900' }, divider: { height: 1, backgroundColor: '#222832', marginVertical: 8 },
+  effortTitle: { color: '#F5F2EA', fontSize: 20, fontWeight: '900', marginTop: 4 }, effortRow: { flexDirection: 'row', gap: 8 }, effortButton: { flex: 1, aspectRatio: 1, borderRadius: 15, borderWidth: 1, borderColor: '#323945', backgroundColor: '#10141A', alignItems: 'center', justifyContent: 'center' }, effortButtonActive: { borderColor: '#C89B3C', backgroundColor: '#241E12' }, effortValue: { color: '#8E96A1', fontSize: 20, fontWeight: '900' }, effortValueActive: { color: '#E3B95E' }, effortCaption: { color: '#777F89', textAlign: 'center', fontSize: 12 },
+  coachCard: { backgroundColor: '#12100C', borderWidth: 1, borderColor: '#3B3020', borderRadius: 20, padding: 18, gap: 7 }, coachTitle: { color: '#F0EEE8', fontSize: 18, fontWeight: '900' }, coachCopy: { color: '#A49C90', fontSize: 13, lineHeight: 19 },
 });
