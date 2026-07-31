@@ -1,0 +1,17 @@
+{
+  "expo": {
+    "name": "CampOS",
+    "slug": "campos",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "scheme": "campos",
+    "userInterfaceStyle": "dark",
+    "plugins": ["expo-router"],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "ios": {
+      "supportsTablet": true
+    }
+  }
+}
