@@ -6,74 +6,88 @@ import { getReadiness } from '../lib/readiness-storage';
 import { buildWeightStats, getWeightHistory } from '../lib/progress-storage';
 import { buildWorkoutStats, getActiveWorkoutSession, getWorkoutHistory } from '../lib/training-storage';
 import { buildNutritionStats, getNutritionDay, getNutritionGoals } from '../lib/nutrition-storage';
+import { buildWalkStats, getActiveWalk, getWalkHistory } from '../lib/walk-storage';
 
 const DEFAULT_SIGNALS: ReadinessSignals = { sleep: 75, energy: 7, soreness: 3, stress: 4, jointComfort: 8, pain: 0 };
 
 type TrainingStats = ReturnType<typeof buildWorkoutStats>;
 type WeightStats = ReturnType<typeof buildWeightStats>;
 type NutritionStats = ReturnType<typeof buildNutritionStats>;
+type WalkStats = ReturnType<typeof buildWalkStats>;
 
 const EMPTY_TRAINING: TrainingStats = { totalMissions: 0, totalMinutes: 0, averageEffort: 0, activeDays: 0, currentStreak: 0, thisWeekMissions: 0, thisWeekActiveDays: 0, thisWeekMinutes: 0 };
 const EMPTY_WEIGHT: WeightStats = { current: 0, starting: 0, change: 0, trend: 'No data' };
 const EMPTY_NUTRITION: NutritionStats = { calories: 0, protein: 0, carbs: 0, fat: 0, caloriesRemaining: 0, proteinRemaining: 0, calorieProgress: 0, proteinProgress: 0, overCalories: false, calorieDelta: 0 };
+const EMPTY_WALKS: WalkStats = { totalWalks: 0, totalMinutes: 0, todayMinutes: 0 };
 
 export default function CoachScreen() {
   const [prescription, setPrescription] = useState<SessionPrescription>(() => calculateReadiness(DEFAULT_SIGNALS));
   const [training, setTraining] = useState<TrainingStats>(EMPTY_TRAINING);
   const [weight, setWeight] = useState<WeightStats>(EMPTY_WEIGHT);
   const [nutrition, setNutrition] = useState<NutritionStats>(EMPTY_NUTRITION);
+  const [walks, setWalks] = useState<WalkStats>(EMPTY_WALKS);
   const [hasActiveSession, setHasActiveSession] = useState(false);
+  const [hasActiveWalk, setHasActiveWalk] = useState(false);
 
   const refresh = useCallback(async () => {
-    const [readiness, history, weights, active, nutritionDay, nutritionGoals] = await Promise.all([
+    const [readiness, history, weights, active, nutritionDay, nutritionGoals, walkHistory, activeWalk] = await Promise.all([
       getReadiness(),
       getWorkoutHistory(),
       getWeightHistory(),
       getActiveWorkoutSession(),
       getNutritionDay(),
       getNutritionGoals(),
+      getWalkHistory(),
+      getActiveWalk(),
     ]);
     setPrescription(readiness?.prescription ?? calculateReadiness(DEFAULT_SIGNALS));
     setTraining(buildWorkoutStats(history));
     setWeight(buildWeightStats(weights));
     setNutrition(buildNutritionStats(nutritionDay.entries, nutritionGoals));
+    setWalks(buildWalkStats(walkHistory));
     setHasActiveSession(Boolean(active));
+    setHasActiveWalk(Boolean(activeWalk));
   }, []);
 
   useFocusEffect(useCallback(() => { refresh(); }, [refresh]));
 
   const decision = useMemo(() => {
     if (hasActiveSession) return { title: 'Finish the mission already in progress.', detail: 'CampOS saved your exact block, timer, completed work, and live adaptations.', action: 'RESUME MISSION', route: '/workout' as const };
+    if (hasActiveWalk) return { title: 'Finish the recovery action already in motion.', detail: 'Your guided walk was saved exactly where you left it. Continue when you are ready.', action: 'RESUME WALK', route: '/walk' as const };
     if (prescription.stopForPain) return { title: 'Recovery is the mission today.', detail: 'High pain overrides the normal plan. Keep movement pain-free and do not force loaded work.', action: 'VIEW READINESS', route: '/' as const };
-    if (prescription.mode === 'recover') return { title: 'Preserve the habit without creating more fatigue.', detail: 'Your readiness signals favor a reduced technical session. Showing up still counts.', action: 'START RECOVERY SESSION', route: '/workout' as const };
+    if (prescription.mode === 'recover') return { title: 'Lower the load and preserve momentum.', detail: 'Readiness is low enough that a calm guided walk is the cleaner default. It keeps the day moving without manufacturing more fatigue.', action: 'START GUIDED WALK', route: '/walk' as const };
     if (training.totalMissions === 0) return { title: 'Create the first piece of evidence.', detail: 'Complete one guided mission so CampOS can begin learning from real training history.', action: 'START FIRST MISSION', route: '/workout' as const };
     if (training.thisWeekMissions === 0) return { title: 'Put the first win on this week.', detail: 'Your history exists. Now re-establish momentum with one controlled mission.', action: 'START MISSION', route: '/workout' as const };
     if (prescription.mode === 'push') return { title: 'Use the extra capacity—without chasing failure.', detail: 'Recovery supports a performance day. Press pace only while movement stays sharp.', action: 'START PERFORMANCE DAY', route: '/workout' as const };
     return { title: 'Execute the planned work cleanly.', detail: 'Readiness is stable. The highest-value move is a controlled session followed by normal recovery.', action: 'START GUIDED MISSION', route: '/workout' as const };
-  }, [hasActiveSession, prescription, training]);
+  }, [hasActiveSession, hasActiveWalk, prescription, training]);
 
   const fuelDecision = useMemo(() => {
     if (nutrition.overCalories) {
       return {
         title: 'No compensation required.',
-        detail: `Today is ${nutrition.calorieDelta} calories above the current target. Do not add punishment cardio or skip meals. Choose one small reset action and continue normally.`,
+        detail: `Today is ${nutrition.calorieDelta} calories above the current target. Do not add punishment cardio or skip meals. If a short walk helps you reset mentally, use it as recovery—not as a way to erase food.`,
+        showWalk: true,
       };
     }
     if (nutrition.proteinRemaining > 30) {
       return {
         title: 'Protein is the clearest fuel gap.',
         detail: `${nutrition.proteinRemaining}g remains against today’s protein target. Use the Fuel screen to finish the day with a normal protein-forward meal or snack.`,
+        showWalk: false,
       };
     }
     if (nutrition.calories === 0) {
       return {
         title: 'Fuel data is still empty today.',
         detail: 'Log a meal when convenient. CampOS can give better context once it knows what has actually been eaten.',
+        showWalk: false,
       };
     }
     return {
       title: 'Fueling is in a workable range.',
       detail: 'Keep eating normally, hydrate, and avoid trying to make the day perfect. Consistency matters more than a single number.',
+      showWalk: false,
     };
   }, [nutrition]);
 
@@ -108,6 +122,8 @@ export default function CoachScreen() {
           <Metric value={weight.current ? `${weight.current.toFixed(1)}` : '—'} label="BODYWEIGHT" />
           <Metric value={`${nutrition.calories}`} label="CALORIES" />
           <Metric value={`${nutrition.protein}g`} label="PROTEIN" />
+          <Metric value={`${walks.todayMinutes}`} label="WALK MIN TODAY" />
+          <Metric value={`${walks.totalWalks}`} label="GUIDED WALKS" />
         </View>
 
         <TouchableOpacity activeOpacity={0.85} style={styles.fuelCard} onPress={() => router.push('/nutrition')}>
@@ -115,6 +131,7 @@ export default function CoachScreen() {
           <Text style={styles.guardrailTitle}>{fuelDecision.title}</Text>
           <Text style={styles.guardrailCopy}>{fuelDecision.detail}</Text>
         </TouchableOpacity>
+        {fuelDecision.showWalk ? <TouchableOpacity style={styles.walkReset} onPress={() => router.push('/walk')}><Text style={styles.walkResetLabel}>WIN THE DAY</Text><Text style={styles.walkResetTitle}>Take a calm 10-minute reset walk →</Text><Text style={styles.walkResetCopy}>For recovery and continuity—not calorie repayment.</Text></TouchableOpacity> : null}
 
         <View style={styles.guardrail}>
           <Text style={styles.guardrailLabel}>COACH GUARDRAIL</Text>
@@ -124,6 +141,7 @@ export default function CoachScreen() {
 
         <View style={styles.actions}>
           <TouchableOpacity style={styles.secondary} onPress={() => router.push('/')}><Text style={styles.secondaryText}>UPDATE READINESS</Text></TouchableOpacity>
+          <TouchableOpacity style={styles.secondary} onPress={() => router.push('/walk')}><Text style={styles.secondaryText}>GUIDED WALK</Text></TouchableOpacity>
           <TouchableOpacity style={styles.secondary} onPress={() => router.push('/nutrition')}><Text style={styles.secondaryText}>VIEW FUEL</Text></TouchableOpacity>
           <TouchableOpacity style={styles.secondary} onPress={() => router.push('/progress')}><Text style={styles.secondaryText}>VIEW PROGRESS</Text></TouchableOpacity>
         </View>
@@ -165,6 +183,7 @@ const styles = StyleSheet.create({
   metricLabel: { color: '#717985', fontSize: 9, fontWeight: '900', marginTop: 5 },
   fuelCard: { backgroundColor: '#101510', borderWidth: 1, borderColor: '#304130', borderRadius: 20, padding: 18, gap: 7, marginTop: 4 },
   fuelHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }, fuelLink: { color: '#99B69A', fontSize: 9, fontWeight: '900', letterSpacing: 0.5 },
+  walkReset: { backgroundColor: '#10151A', borderWidth: 1, borderColor: '#2B4550', borderRadius: 20, padding: 18, gap: 6 }, walkResetLabel: { color: '#83AFBF', fontSize: 9, fontWeight: '900', letterSpacing: 1.2 }, walkResetTitle: { color: '#E9F0F2', fontSize: 17, fontWeight: '900' }, walkResetCopy: { color: '#87949A', fontSize: 12, lineHeight: 18 },
   guardrail: { backgroundColor: '#12100C', borderWidth: 1, borderColor: '#403421', borderRadius: 20, padding: 18, gap: 7, marginTop: 4 },
   guardrailLabel: { color: '#C89B3C', fontSize: 9, fontWeight: '900', letterSpacing: 1.2 },
   guardrailTitle: { color: '#EEEAE2', fontSize: 18, fontWeight: '900' },
