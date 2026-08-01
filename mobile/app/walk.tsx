@@ -27,7 +27,9 @@ export default function WalkScreen() {
   const [startedAt, setStartedAt] = useState<string | null>(null);
   const [restored, setRestored] = useState(false);
   const [finished, setFinished] = useState(false);
+  const [saved, setSaved] = useState(false);
   const hydrated = useRef(false);
+  const savingCompletion = useRef(false);
 
   const moodData = useMemo(() => MOODS.find((item) => item.key === mood) ?? MOODS[2], [mood]);
   const progress = Math.min(100, Math.round((elapsedSeconds / targetSeconds) * 100));
@@ -67,24 +69,31 @@ export default function WalkScreen() {
     saveActiveWalk({ startedAt, mood, targetSeconds, elapsedSeconds, isRunning: running }).catch(() => {});
   }, [elapsedSeconds, finished, mood, running, startedAt, targetSeconds]);
 
-  const start = () => {
-    if (!startedAt) setStartedAt(new Date().toISOString());
-    setFinished(false);
-    setRunning(true);
-  };
-
-  const finish = async () => {
-    const completedAt = new Date().toISOString();
-    await saveWalkSession({
+  useEffect(() => {
+    if (!finished || savingCompletion.current || saved) return;
+    savingCompletion.current = true;
+    saveWalkSession({
       id: `${Date.now()}`,
-      completedAt,
+      completedAt: new Date().toISOString(),
       mood,
       durationSeconds: Math.max(elapsedSeconds, 60),
       targetSeconds,
-    });
-    await clearActiveWalk();
-    setFinished(true);
+    })
+      .then(clearActiveWalk)
+      .then(() => setSaved(true))
+      .finally(() => { savingCompletion.current = false; });
+  }, [elapsedSeconds, finished, mood, saved, targetSeconds]);
+
+  const start = () => {
+    if (!startedAt) setStartedAt(new Date().toISOString());
+    setFinished(false);
+    setSaved(false);
+    setRunning(true);
+  };
+
+  const finish = () => {
     setRunning(false);
+    setFinished(true);
   };
 
   const exit = async () => {
@@ -105,10 +114,10 @@ export default function WalkScreen() {
           <Text style={styles.copy}>That walk counts as recovery, consistency, and momentum. No need to turn it into punishment or chase extra work.</Text>
           <View style={styles.summaryCard}>
             <Text style={styles.summaryValue}>{formatTime(elapsedSeconds)}</Text>
-            <Text style={styles.summaryLabel}>{moodData.label.toUpperCase()} WALK</Text>
+            <Text style={styles.summaryLabel}>{moodData.label.toUpperCase()} WALK · {saved ? 'SAVED' : 'SAVING…'}</Text>
           </View>
-          <TouchableOpacity style={styles.primary} onPress={() => router.replace('/coach')}><Text style={styles.primaryText}>RETURN TO COACH →</Text></TouchableOpacity>
-          <TouchableOpacity style={styles.secondary} onPress={() => router.replace('/')}><Text style={styles.secondaryText}>HOME</Text></TouchableOpacity>
+          <TouchableOpacity disabled={!saved} style={[styles.primary, !saved && styles.disabled]} onPress={() => router.replace('/coach')}><Text style={styles.primaryText}>{saved ? 'RETURN TO COACH →' : 'SAVING WALK…'}</Text></TouchableOpacity>
+          <TouchableOpacity disabled={!saved} style={[styles.secondary, !saved && styles.disabled]} onPress={() => router.replace('/')}><Text style={styles.secondaryText}>HOME</Text></TouchableOpacity>
         </View>
       </SafeAreaView>
     );
@@ -204,6 +213,7 @@ const styles = StyleSheet.create({
   durationTextActive: { color: '#E3B95E' },
   primary: { backgroundColor: '#C89B3C', borderRadius: 17, padding: 17, alignItems: 'center', marginTop: 4 },
   primaryText: { color: '#090B0E', fontWeight: '900', letterSpacing: 0.7 },
+  disabled: { opacity: 0.5 },
   timerCard: { backgroundColor: '#11151B', borderWidth: 1, borderColor: '#2B313A', borderRadius: 24, padding: 21, gap: 12 },
   timer: { color: '#E1B75E', fontSize: 62, fontWeight: '900', textAlign: 'center', marginTop: 6 },
   progress: { color: '#777F8A', fontSize: 10, fontWeight: '900', textAlign: 'center', letterSpacing: 0.8 },
