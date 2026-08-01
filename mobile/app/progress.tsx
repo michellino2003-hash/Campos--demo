@@ -3,25 +3,29 @@ import { SafeAreaView, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity
 import { router, useFocusEffect } from 'expo-router';
 import { buildWeightStats, getWeightHistory, saveWeightEntry, type WeightEntry } from '../lib/progress-storage';
 import { buildWorkoutStats, getWorkoutHistory, type WorkoutSession } from '../lib/training-storage';
+import { buildWalkStats, getWalkHistory, type WalkSession } from '../lib/walk-storage';
 
 const formatDate = (iso: string) => new Date(iso).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
 const formatDuration = (seconds: number) => `${Math.max(1, Math.round(seconds / 60))} min`;
 
 export default function ProgressScreen() {
   const [history, setHistory] = useState<WorkoutSession[]>([]);
+  const [walkHistory, setWalkHistory] = useState<WalkSession[]>([]);
   const [weights, setWeights] = useState<WeightEntry[]>([]);
   const [weightInput, setWeightInput] = useState('');
   const [saving, setSaving] = useState(false);
 
   const refresh = useCallback(async () => {
-    const [sessions, bodyweight] = await Promise.all([getWorkoutHistory(), getWeightHistory()]);
+    const [sessions, walks, bodyweight] = await Promise.all([getWorkoutHistory(), getWalkHistory(), getWeightHistory()]);
     setHistory(sessions);
+    setWalkHistory(walks);
     setWeights(bodyweight);
   }, []);
 
   useFocusEffect(useCallback(() => { refresh(); }, [refresh]));
 
   const training = buildWorkoutStats(history);
+  const walks = buildWalkStats(walkHistory);
   const body = buildWeightStats(weights);
 
   const logWeight = async () => {
@@ -46,14 +50,26 @@ export default function ProgressScreen() {
         <View style={styles.grid}>
           <Metric value={`${training.currentStreak}`} label="DAY STREAK" />
           <Metric value={`${training.totalMissions}`} label="MISSIONS" />
-          <Metric value={`${training.totalMinutes}`} label="MINUTES" />
+          <Metric value={`${training.totalMinutes}`} label="TRAIN MIN" />
           <Metric value={training.averageEffort ? `${training.averageEffort}` : '—'} label="AVG RPE" />
+          <Metric value={`${walks.totalWalks}`} label="GUIDED WALKS" />
+          <Metric value={`${walks.totalMinutes}`} label="WALK MIN" />
         </View>
 
         <View style={styles.weekCard}>
           <View><Text style={styles.cardLabel}>THIS WEEK</Text><Text style={styles.weekValue}>{training.thisWeekMissions} missions</Text></View>
-          <View style={styles.weekStats}><Text style={styles.weekStat}>{training.thisWeekActiveDays} active days</Text><Text style={styles.weekStat}>{training.thisWeekMinutes} min trained</Text></View>
+          <View style={styles.weekStats}><Text style={styles.weekStat}>{training.thisWeekActiveDays} active days</Text><Text style={styles.weekStat}>{training.thisWeekMinutes} min trained</Text><Text style={styles.weekStat}>{walks.todayMinutes} walk min today</Text></View>
         </View>
+
+        <Text style={styles.section}>Guided walks</Text>
+        {walkHistory.length === 0 ? (
+          <TouchableOpacity style={styles.empty} onPress={() => router.push('/walk')}><Text style={styles.emptyTitle}>No guided walks yet.</Text><Text style={styles.emptyText}>Choose a mood and start a recovery walk when you want a low-pressure way to keep the day moving.</Text></TouchableOpacity>
+        ) : walkHistory.slice(0, 6).map((walk) => (
+          <View key={walk.id} style={styles.walkCard}>
+            <View><Text style={styles.walkMood}>{walk.mood.toUpperCase()}</Text><Text style={styles.walkDate}>{formatDate(walk.completedAt)}</Text></View>
+            <View style={styles.walkRight}><Text style={styles.walkDuration}>{formatDuration(walk.durationSeconds)}</Text><Text style={styles.walkTarget}>{Math.round(walk.targetSeconds / 60)} min target</Text></View>
+          </View>
+        ))}
 
         <Text style={styles.section}>Bodyweight</Text>
         <View style={styles.weightCard}>
@@ -82,7 +98,7 @@ export default function ProgressScreen() {
           </View>
         ))}
 
-        <Text style={styles.footer}>Every completed mission becomes evidence.</Text>
+        <Text style={styles.footer}>Every completed mission and recovery action becomes evidence.</Text>
       </ScrollView>
     </SafeAreaView>
   );
@@ -99,6 +115,7 @@ const styles = StyleSheet.create({
   section: { color: '#F5F2EA', fontSize: 20, fontWeight: '900', marginTop: 14 }, subsection: { color: '#D9D7D1', fontSize: 15, fontWeight: '900', marginTop: 5 },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 }, metric: { width: '48%', backgroundColor: '#0E1217', borderWidth: 1, borderColor: '#232933', borderRadius: 18, padding: 16 }, metricValue: { color: '#F5F2EA', fontSize: 28, fontWeight: '900' }, metricLabel: { color: '#717985', fontSize: 9, fontWeight: '900', marginTop: 5 },
   weekCard: { backgroundColor: '#11151B', borderWidth: 1, borderColor: '#2B313A', borderRadius: 20, padding: 17, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }, cardLabel: { color: '#858C98', fontSize: 10, fontWeight: '900', letterSpacing: 1 }, weekValue: { color: '#F5F2EA', fontSize: 20, fontWeight: '900', marginTop: 5 }, weekStats: { alignItems: 'flex-end', gap: 4 }, weekStat: { color: '#8F96A1', fontSize: 11, fontWeight: '700' },
+  walkCard: { backgroundColor: '#10151A', borderWidth: 1, borderColor: '#293944', borderRadius: 17, padding: 15, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }, walkMood: { color: '#A9CAD5', fontWeight: '900', fontSize: 12, letterSpacing: 0.7 }, walkDate: { color: '#6E7C83', fontSize: 10, marginTop: 4 }, walkRight: { alignItems: 'flex-end' }, walkDuration: { color: '#EDF1F2', fontSize: 16, fontWeight: '900' }, walkTarget: { color: '#6E7C83', fontSize: 10, marginTop: 3 },
   weightCard: { backgroundColor: '#11100D', borderWidth: 1, borderColor: '#3C3221', borderRadius: 22, padding: 18, gap: 13 }, weightTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }, weightValue: { color: '#F5F2EA', fontSize: 30, fontWeight: '900', marginTop: 4 }, changeWrap: { alignItems: 'flex-end' }, change: { color: '#E1B75E', fontSize: 18, fontWeight: '900' }, changeLabel: { color: '#776B55', fontSize: 8, fontWeight: '900', marginTop: 3 }, weightMeta: { color: '#8E8A80', fontSize: 12 },
   inputRow: { flexDirection: 'row', gap: 9 }, input: { flex: 1, backgroundColor: '#0B0D10', borderWidth: 1, borderColor: '#303640', borderRadius: 14, paddingHorizontal: 14, paddingVertical: 13, color: '#F5F2EA', fontSize: 18, fontWeight: '800' }, logButton: { backgroundColor: '#C89B3C', borderRadius: 14, paddingHorizontal: 22, justifyContent: 'center' }, logButtonText: { color: '#090B0E', fontWeight: '900' },
   listRow: { flexDirection: 'row', justifyContent: 'space-between', backgroundColor: '#0E1217', borderWidth: 1, borderColor: '#232933', borderRadius: 14, padding: 14 }, listPrimary: { color: '#EDEBE6', fontWeight: '900' }, listSecondary: { color: '#787F89', fontSize: 12 },
